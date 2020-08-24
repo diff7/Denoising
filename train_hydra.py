@@ -2,7 +2,6 @@ import os
 import hydra
 import numpy as np
 import torch
-from sacred.observers import MongoObserver
 from torch.utils.data import DataLoader
 
 from model.unet_basic import Model as Unet
@@ -10,14 +9,6 @@ from dataset.waveform_dataset import DatasetAudio
 from trainer.trainer import Trainer
 from model.loss import mse_loss, l1_loss
 
-
-ex = Experiment(EXP_NAME)
-ex.add_config(params)
-ex.observers.append(
-    MongoObserver.create(
-        url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"
-    )
-)
 
 
 @hydra.main(config_path="config_h.yaml")
@@ -41,12 +32,12 @@ def main(config):
         betas=(config.optim.beta1, config.optim.beta2),
     )
 
-    loss_function = globals()[config.loss]
+    loss_function = globals()[config.loss]()
 
-    trainer_class = Trainer(
+    trainer = Trainer(
         config=config.trainer,
         model=model,
-        loss_function=optimizer,
+        loss_function=loss_function,
         optimizer=optimizer,
         train_dataloader=train_dataloader,
         validation_dataloader=val_dataloader,

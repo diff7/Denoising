@@ -2,7 +2,7 @@ import os
 
 import librosa
 from torch.utils import data
-
+from torch.utils.data import Dataset
 from util.utils import sample_fixed_length_data_aligned
 
 
@@ -34,12 +34,12 @@ class DatasetAudio(data.Dataset):
         super(Dataset, self).__init__()
         dataset_list = [
             line.rstrip("\n")
-            for line in open(os.path.abspath(os.path.expanduser(dataset)), "r")
+            for line in open(os.path.abspath(os.path.expanduser(file_path)), "r")
         ]
 
-        dataset_list = dataset_list[offset:]
-        if limit:
-            dataset_list = dataset_list[:limit]
+        #dataset_list = dataset_list[offset:]
+        #if limit:
+        #    dataset_list = dataset_list[:limit]
 
         assert mode in (
             "train",

@@ -37,7 +37,7 @@ class BaseTrainer:
         )
         self.checkpoints_dir = self.root_dir / "checkpoints"
         self.logs_dir = self.root_dir / "logs"
-        prepare_empty_dir([self.checkpoints_dir, self.logs_dir], resume=resume)
+        prepare_empty_dir([self.checkpoints_dir, self.logs_dir], resume=self.resume)
 
         self.writer = visualization.writer(self.logs_dir.as_posix())
         self.writer.add_text(
