@@ -1,0 +1,40 @@
+seed: 77
+data:
+  dataset_train:
+    file_path: 'd_path'
+    val_path: 'd_path'
+    sample_length: 16384
+    mode: 'train'
+
+  dataset_val:
+    file_path: 'd_path'
+    sample_length: 16384
+    mode: 'validation'
+
+  loader_train:
+    shuffle: True
+    num_workers: 10
+    batch_size: 128
+
+model:
+  n_layers: 12
+  channels_interval:  24
+
+optim:
+  lr: 0.001
+  beta1: 0.9
+  beta2: 0.009
+
+loss: mse_loss # l1_lossw
+
+trainer:
+  resume: False # continue training
+  epochs: 1200
+  save_checkpoint_interval: 10
+  find_max: True  # early stop - save best model but keep training
+  val_interval: 10
+  visualize_waveform_limit: 20
+  visualize_spectrogram_limit: 20
+  sample_length: 16384
+  root_dir: 'outputs'
+  experiment_name: 'debug'
