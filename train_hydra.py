@@ -17,6 +17,7 @@ from sacred.observers import MongoObserver
 ex = Experiment('SOME NAME')
 ex.observers.append(MongoObserver.create(url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"))
 
+
 initialize(config_dir="conf", strict=True)
 cfg = compose("config.yaml", overrides=["db=mysql", "db.user=${env:USER}"])
 print(cfg.pretty(resolve=True))
