@@ -8,6 +8,6 @@ then
  else
 	  git status
 	   echo "Pushing data to origin ..."
-	    git push -u origin master
+	    git push origin master
     fi
 
