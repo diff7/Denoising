@@ -18,18 +18,22 @@ ex = Experiment('SOME NAME')
 ex.observers.append(MongoObserver.create(url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"))
 
 
-initialize(config_dir="conf", strict=True)
-cfg = compose("config.yaml", overrides=["db=mysql", "db.user=${env:USER}"])
-print(cfg.pretty(resolve=True))
+initialize(config_dir="./", strict=True)
+config = compose("config_h.yaml")
+#ex.add_config(dict(config))
 
 
+@ex.capture
+def add_metrics(_run, key, value, order):
+    ex.log_scalar(key, float(value), order)
 
 
-def main(config):
+@ex.automain
+def main():
+    print(config.pretty(resolve=True))
     torch.manual_seed(config["seed"])  # for both CPU and GPU
     np.random.seed(config["seed"])
-
-    train_set = DatasetAudio(**config.data.dataset_train)
+    train_set = DatasetAudio(**dict(config.data.dataset_train))
     train_dataloader = DataLoader(dataset=train_set, **config.data.loader_train)
 
     val_set = DatasetAudio(**config.data.dataset_val)
@@ -59,5 +63,3 @@ def main(config):
     trainer.train()
 
 
-if __name__ == "__main__":
-    main()
