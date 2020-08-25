@@ -8,10 +8,13 @@ from model.unet_basic import Model as Unet
 from dataset.waveform_dataset import DatasetAudio
 from trainer.trainer import Trainer
 from model.loss import mse_loss, l1_loss
+from hydra.experimental import compose, initialize
+
+initialize(config_dir="conf", strict=True)
+cfg = compose("config.yaml", overrides=["db=mysql", "db.user=${env:USER}"])
+print(cfg.pretty(resolve=True))
 
 
-
-@hydra.main(config_path="config_h.yaml")
 def main(config):
     torch.manual_seed(config["seed"])  # for both CPU and GPU
     np.random.seed(config["seed"])
