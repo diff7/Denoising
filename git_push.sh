@@ -1,14 +1,5 @@
-#echo "Enter your message"
-#read message
+#!/bin/bash  
+message="auto-commit from $USER@$(hostname -s) on $(date)"
 git add .
-git commit -m"auto push"
-
-if [ -n "$(git status - porcelain)" ];
-    then
-	 echo "IT IS CLEAN"
-    else
-	 git status
-	 echo "Pushing data to origin ..."
-	 git push origin master
-fi
-
+git commit -m"$message"
+git push -u origin master

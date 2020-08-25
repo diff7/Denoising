@@ -23,6 +23,8 @@ cfg = compose("config.yaml", overrides=["db=mysql", "db.user=${env:USER}"])
 print(cfg.pretty(resolve=True))
 
 
+
+
 def main(config):
     torch.manual_seed(config["seed"])  # for both CPU and GPU
     np.random.seed(config["seed"])
