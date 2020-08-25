@@ -2,12 +2,13 @@
 #read message
 git add .
 git commit -m"auto push"
+
 if [ -n "$(git status - porcelain)" ];
-then
+    then
 	 echo "IT IS CLEAN"
- else
-	  git status
-	   echo "Pushing data to origin ..."
-	    git push origin master
-    fi
+    else
+	 git status
+	 echo "Pushing data to origin ..."
+	 git push origin master
+fi
 
