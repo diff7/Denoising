@@ -9,28 +9,28 @@ from dataset.waveform_dataset import DatasetAudio
 from trainer.trainer import Trainer
 from model.loss import mse_loss, l1_loss
 from hydra.experimental import compose, initialize
-
-
 from sacred import Experiment
 from sacred.observers import MongoObserver
 
-ex = Experiment('SOME NAME')
-ex.observers.append(MongoObserver.create(url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"))
+from util.utils import OmniLogger
+
+ex = Experiment("SOME NAME")
+ex.observers.append(
+    MongoObserver.create(
+        url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"
+    )
+)
 
 
 initialize(config_dir="./", strict=True)
 config = compose("config_h.yaml")
-#ex.add_config(dict(config))
-
-
-@ex.capture
-def add_metrics(_run, key, value, order):
-    ex.log_scalar(key, float(value), order)
+# ex.add_config(dict(config))
 
 
 @ex.automain
 def main():
     print(config.pretty(resolve=True))
+    writer = OmniLogger(ex, cfg.root_dir)
     torch.manual_seed(config["seed"])  # for both CPU and GPU
     np.random.seed(config["seed"])
     train_set = DatasetAudio(**dict(config.data.dataset_train))
@@ -54,6 +54,7 @@ def main():
     trainer = Trainer(
         config=config.trainer,
         model=model,
+        writer=writer,
         loss_function=loss_function,
         optimizer=optimizer,
         train_dataloader=train_dataloader,
@@ -61,5 +62,3 @@ def main():
     )
 
     trainer.train()
-
-

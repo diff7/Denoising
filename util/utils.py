@@ -2,6 +2,7 @@ import importlib
 import time
 import os
 
+import librosa
 import torch
 from pesq import pesq
 import numpy as np
@@ -10,7 +11,10 @@ from pystoi.stoi import stoi
 
 def load_checkpoint(checkpoint_path, device):
     _, ext = os.path.splitext(os.path.basename(checkpoint_path))
-    assert ext in (".pth", ".tar"), "Only support ext and tar extensions of model checkpoint."
+    assert ext in (
+        ".pth",
+        ".tar",
+    ), "Only support ext and tar extensions of model checkpoint."
     model_checkpoint = torch.load(checkpoint_path, map_location=device)
 
     if ext == ".pth":
@@ -72,7 +76,6 @@ def initialize_config(module_cfg, pass_args=True):
         return getattr(module, module_cfg["main"])
 
 
-
 def compute_PESQ(clean_signal, noisy_signal, sr=16000):
     return pesq(sr, clean_signal, noisy_signal, "wb")
 
@@ -102,7 +105,9 @@ def sample_fixed_length_data_aligned(data_a, data_b, sample_length):
     """sample with fixed length from two dataset
     """
     assert len(data_a) == len(data_b), "Inconsistent dataset length, unable to sampling"
-    assert len(data_a) >= sample_length, f"len(data_a) is {len(data_a)}, sample_length is {sample_length}."
+    assert (
+        len(data_a) >= sample_length
+    ), f"len(data_a) is {len(data_a)}, sample_length is {sample_length}."
 
     frames_total = len(data_a)
 
@@ -121,4 +126,30 @@ def print_tensor_info(tensor, flag="Tensor"):
     floor_tensor = lambda float_tensor: int(float(float_tensor) * 1000) / 1000
     print(flag)
     print(
-        f"\tmax: {floor_tensor(torch.max(tensor))}, min: {float(torch.min(tensor))}, mean: {floor_tensor(torch.mean(tensor))}, std: {floor_tensor(torch.std(tensor))}")
+        f"\tmax: {floor_tensor(torch.max(tensor))}, min: {float(torch.min(tensor))}, mean: {floor_tensor(torch.mean(tensor))}, std: {floor_tensor(torch.std(tensor))}"
+    )
+
+
+class OmniLogger:
+    def __ini__(self, ex, dir):
+        self.ex = ex
+        self.dir = dir
+
+    def add_scalar(self, key, value, order):
+        self.ex.log_scalar(key, float(value), order)
+
+    def add_audio(self, name, array, epoch, sr):
+        name = f"ep_{epoch}_{name}.wav"
+        full_path = os.path.join(self.dir, name)
+        librosa.output.write_wav(full_path, array, sr, norm=False)
+        self.ex.add_artifact(full_path, name)
+
+    def add_image(self, name, array):
+        full_path = os.path.join(self.dir, name)
+        self.ex.add_artifact(full_path, name)
+
+    def add_figure(self, name, fig, epoch):
+        name = f"ep_{epoch}_{name}.png"
+        full_path = os.path.join(self.dir, name)
+        fig.savefig(full_path)
+        self.ex.add_artifact(full_path, name)

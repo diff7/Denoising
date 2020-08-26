@@ -9,7 +9,7 @@ from util.utils import prepare_empty_dir, ExecutionTime
 
 
 class BaseTrainer:
-    def __init__(self, config, model, loss_function, optimizer):
+    def __init__(self, config, model, writer, loss_function, optimizer):
         self.n_gpu = torch.cuda.device_count()
         self.device = self._prepare_device(
             self.n_gpu, cudnn_deterministic=config["cudnn_deterministic"]
@@ -39,13 +39,7 @@ class BaseTrainer:
         self.logs_dir = self.root_dir / "logs"
         prepare_empty_dir([self.checkpoints_dir, self.logs_dir], resume=self.resume)
 
-        self.writer = visualization.writer(self.logs_dir.as_posix())
-        self.writer.add_text(
-            tag="Configuration",
-            text_string=f"<pre>  \n{config.pretty()}  \n</pre>",
-            global_step=1,
-        )
-
+        self.writer = writer
         if self.resume:
             self._resume_checkpoint()
 

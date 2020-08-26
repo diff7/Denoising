@@ -15,12 +15,13 @@ class Trainer(BaseTrainer):
         self,
         config,
         model,
+        writer,
         loss_function,
         optimizer,
         train_dataloader,
         validation_dataloader,
     ):
-        super(Trainer, self).__init__(config, model, loss_function, optimizer)
+        super(Trainer, self).__init__(config, model, writer, loss_function, optimizer)
         self.train_data_loader = train_dataloader
         self.validation_data_loader = validation_dataloader
 
@@ -155,20 +156,17 @@ class Trainer(BaseTrainer):
 
         get_metrics_ave = lambda metrics: np.sum(metrics) / len(metrics)
         self.writer.add_scalars(
-            f"Metric/STOI",
-            {
-                "Clean and noisy": get_metrics_ave(stoi_c_n),
-                "Clean and enhanced": get_metrics_ave(stoi_c_e),
-            },
-            epoch,
+            f"Metric/STOI Clean and noisy", get_metrics_ave(stoi_c_n), epoch
         )
         self.writer.add_scalars(
-            f"Metric/PESQ",
-            {
-                "Clean and noisy": get_metrics_ave(pesq_c_n),
-                "Clean and enhanced": get_metrics_ave(pesq_c_e),
-            },
-            epoch,
+            f"Metric/STOI Clean and enhanced", get_metrics_ave(stoi_c_e), epoch
+        )
+
+        self.writer.add_scalars(
+            f"Metric/PESQ Clean and noisy", get_metrics_ave(pesq_c_n), epoch
+        )
+        self.writer.add_scalars(
+            f"Metric/PESQ Clean and enhanced", get_metrics_ave(pesq_c_e), epoch
         )
 
         score = (
