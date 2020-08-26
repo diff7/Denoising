@@ -1,5 +1,4 @@
 #!/bin/bash  
-read "mesage"
 message="auto-commit from $USER@$(hostname -s) on $(date)"
 git add .
 git commit -m"$message"
