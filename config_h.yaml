@@ -28,6 +28,7 @@ optim:
 loss: mse_loss # l1_lossw
 
 trainer:
+  sample_rate = 22050
   resume: False # continue training
   epochs: 1200
   save_checkpoint_interval: 10
