@@ -15,9 +15,9 @@ from sacred.observers import MongoObserver
 
 from util.utils import OmniLogger
 
-config = OmegaConf.load("conf.yaml")
+config = OmegaConf.load("config_h.yaml")
+ex = Experiment(config.exp_name)
 ex.add_config(dict(config))
-ex = Experiment(congig.exp_name)
 ex.observers.append(
     MongoObserver.create(
         url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"
@@ -25,11 +25,11 @@ ex.observers.append(
 )
 
 
-@ex.automain
+@ex.main
 def main(_config):
     config = DictConfig(_config)
     print(config.pretty(resolve=True))
-    writer = OmniLogger(ex, cfg.root_dir)
+    writer = OmniLogger(ex, config.root_dir)
     torch.manual_seed(config["seed"])  # for both CPU and GPU
     np.random.seed(config["seed"])
     train_set = DatasetAudio(**dict(config.data.dataset_train))
@@ -61,3 +61,6 @@ def main(_config):
     )
 
     trainer.train()
+
+if __name__ == "__main__":
+    ex.run_commandline()

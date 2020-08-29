@@ -131,7 +131,7 @@ def print_tensor_info(tensor, flag="Tensor"):
 
 
 class OmniLogger:
-    def __ini__(self, ex, dir):
+    def __init__(self, ex, dir):
         self.ex = ex
         self.dir = dir
 
