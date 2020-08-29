@@ -1,8 +1,8 @@
 import time
-from pathlib import Path
 
-import numpy as np
 import torch
+import numpy as np
+from pathlib import Path
 from torch.optim.lr_scheduler import StepLR
 from util import visualization
 from util.utils import prepare_empty_dir, ExecutionTime
@@ -25,16 +25,13 @@ class BaseTrainer:
                 self.model, device_ids=list(range(self.n_gpu))
             )
         # Trainer
-
         for key in config:
             setattr(self, key, config[key])
 
         # The following args is not in the config file. We will update it if the resume is True in later.
         self.start_epoch = 1
         self.best_score = -np.inf if self.find_max else np.inf
-        self.root_dir = (
-            Path(self.root_dir).expanduser().absolute() / self.experiment_name
-        )
+        self.root_dir = Path(self.root_dir).expanduser().absolute() / self.exp_name
         self.checkpoints_dir = self.root_dir / "checkpoints"
         self.logs_dir = self.root_dir / "logs"
         prepare_empty_dir([self.checkpoints_dir, self.logs_dir], resume=self.resume)

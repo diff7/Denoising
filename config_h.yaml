@@ -38,5 +38,5 @@ trainer:
   validation_interval: 1
   sample_length: 16384
   root_dir: 'outputs'
-  experiment_name: 'debug'
+  exp_name: debug
   cudnn_deterministic: True

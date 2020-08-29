@@ -52,6 +52,7 @@ def main(_config):
 
     trainer = Trainer(
         config=config.trainer,
+        exp_name=config.exp_name,
         model=model,
         writer=writer,
         loss_function=loss_function,
