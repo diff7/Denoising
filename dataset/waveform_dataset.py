@@ -66,9 +66,6 @@ class DatasetAudio(data.Dataset):
 
         assert len(clean) == len(mixture)
 
-        print(f"len clean {clean.shape}")
-        print(f"len mixture {mixture.shape}")
-
         if self.mode == "train":
             # The input of model should be fixed-length in the training.
             mixture, clean = sample_fixed_length_data_aligned(

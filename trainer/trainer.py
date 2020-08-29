@@ -56,6 +56,9 @@ class Trainer(BaseTrainer):
             name = name[0]
             padded_length = 0
 
+            print(f"a len clean {clean.shape}")
+            print(f"a len mixture {mixture.shape}")
+
             mixture = mixture.to(self.device)  # [1, 1, T]
 
             # The input of the model should be fixed length.
