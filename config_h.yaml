@@ -39,6 +39,6 @@ trainer:
   visualize_spectrogram_limit: 20
   validation_interval: 1
   sample_length: 16384
-  base_dir: outputs
+  base_dir: '/outputs/results/'
   exp_name: debug
   cudnn_deterministic: True

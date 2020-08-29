@@ -3,11 +3,11 @@ import time
 from datetime import date
 import os
 
-import librosa
 import torch
 from pesq import pesq
 import numpy as np
 from pystoi.stoi import stoi
+from scipy.io.wavfile import write
 
 
 def load_checkpoint(checkpoint_path, device):
@@ -109,7 +109,7 @@ def reverse_min_max(m, m_max, m_min):
 class OmniLogger:
     def __init__(self, ex, dir):
         self.ex = ex
-        self.dir = dir + " " + date.today().strftime("%d/%m/%Y")
+        self.dir = dir + "_" + date.today().strftime("%d/%m/%Y")
         os.makedirs(self.dir, exist_ok=True)
 
     def add_scalar(self, key, value, order):
@@ -118,7 +118,7 @@ class OmniLogger:
     def add_audio(self, name, array, epoch, sr):
         name = f"ep_{epoch}_{name}.wav"
         full_path = os.path.join(self.dir, name)
-        librosa.output.write_wav(full_path, array, sr, norm=False)
+        write(full_path, sr, array)
         self.ex.add_artifact(full_path, name)
 
     def add_image(self, name, array):
