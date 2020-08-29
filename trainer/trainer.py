@@ -9,7 +9,6 @@ from util.utils import compute_STOI, compute_PESQ
 
 # plt.switch_backend("agg")
 
-
 class Trainer(BaseTrainer):
     def __init__(
         self,
@@ -53,7 +52,7 @@ class Trainer(BaseTrainer):
 
         for i, (mixture, clean, name) in enumerate(self.validation_data_loader):
             assert len(name) == 1, "Only support batch size is 1 in enhancement stage."
-            print(f"a len enhanced {enhanced.shape}")
+            print(f"a len mixture {mixture.shape}")
 
             name = name[0]
             padded_length = 0
@@ -78,10 +77,15 @@ class Trainer(BaseTrainer):
                 enhanced_chunks.append(self.model(chunk).detach().cpu())
 
             enhanced = torch.cat(enhanced_chunks, dim=-1)  # [1, 1, T]
-            print(f"b len enhanced {enhanced.shape}")
-            enhanced = (
-                enhanced if padded_length == 0 else enhanced[:, :, :-padded_length]
-            )
+            print(f"b len enhanced {enhanced.shape}, padded {padded_length}")
+#            enhanced =
+#                enhanced if padded_length == 0 else enhanced[:, :, :-padded_length]
+#            )
+
+            if padded_length != 0:
+                enhanced = enhanced[:,:,:-padded_length]
+                mixture = mixture[:,:,:-padded_length]
+
 
             enhanced = enhanced.reshape(-1).numpy()
             clean = clean.numpy().reshape(-1)
