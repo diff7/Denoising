@@ -1,20 +1,23 @@
 import os
-import hydra
+import omegaconf as omg
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from omegaconf import OmegaConf, DictConfig
 
 from model.unet_basic import Model as Unet
 from dataset.waveform_dataset import DatasetAudio
 from trainer.trainer import Trainer
 from model.loss import mse_loss, l1_loss
-from hydra.experimental import compose, initialize
+
 from sacred import Experiment
 from sacred.observers import MongoObserver
 
 from util.utils import OmniLogger
 
-ex = Experiment("SOME NAME")
+config = OmegaConf.load("conf.yaml")
+ex.add_config(dict(config))
+ex = Experiment(congig.exp_name)
 ex.observers.append(
     MongoObserver.create(
         url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"
@@ -22,13 +25,9 @@ ex.observers.append(
 )
 
 
-initialize(config_dir="./", strict=True)
-config = compose("config_h.yaml")
-# ex.add_config(dict(config))
-
-
 @ex.automain
-def main():
+def main(_config):
+    config = DictConfig(_config)
     print(config.pretty(resolve=True))
     writer = OmniLogger(ex, cfg.root_dir)
     torch.manual_seed(config["seed"])  # for both CPU and GPU

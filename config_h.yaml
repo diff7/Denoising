@@ -1,3 +1,5 @@
+exp_name: test
+tag: unet
 seed: 77
 data:
   dataset_train:
