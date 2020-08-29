@@ -69,7 +69,7 @@ class Trainer(BaseTrainer):
                 )
 
             assert mixture.size(-1) % self.sample_length == 0 and mixture.dim() == 3
-            mixture_chunks = list(torch.split(mixture, self.self.sample_length, dim=-1))
+            mixture_chunks = list(torch.split(mixture, self.sample_length, dim=-1))
 
             enhanced_chunks = []
             for chunk in mixture_chunks:
