@@ -45,15 +45,6 @@ class Trainer(BaseTrainer):
 
     @torch.no_grad()
     def _validation_epoch(self, epoch):
-        visualize_audio_limit = self.validation_custom_config["visualize_audio_limit"]
-        visualize_waveform_limit = self.validation_custom_config[
-            "visualize_waveform_limit"
-        ]
-        visualize_spectrogram_limit = self.validation_custom_config[
-            "visualize_spectrogram_limit"
-        ]
-
-        sample_length = self.validation_custom_config["sample_length"]
 
         stoi_c_n = []  # clean and noisy
         stoi_c_e = []  # clean and enhanced
@@ -68,15 +59,17 @@ class Trainer(BaseTrainer):
             mixture = mixture.to(self.device)  # [1, 1, T]
 
             # The input of the model should be fixed length.
-            if mixture.size(-1) % sample_length != 0:
-                padded_length = sample_length - (mixture.size(-1) % sample_length)
+            if mixture.size(-1) % self.sample_length != 0:
+                padded_length = self.sample_length - (
+                    mixture.size(-1) % self.sample_length
+                )
                 mixture = torch.cat(
                     [mixture, torch.zeros(1, 1, padded_length, device=self.device)],
                     dim=-1,
                 )
 
-            assert mixture.size(-1) % sample_length == 0 and mixture.dim() == 3
-            mixture_chunks = list(torch.split(mixture, sample_length, dim=-1))
+            assert mixture.size(-1) % self.sample_length == 0 and mixture.dim() == 3
+            mixture_chunks = list(torch.split(mixture, self.self.sample_length, dim=-1))
 
             enhanced_chunks = []
             for chunk in mixture_chunks:
@@ -94,7 +87,7 @@ class Trainer(BaseTrainer):
             assert len(mixture) == len(enhanced) == len(clean)
 
             # Visualize audio
-            if i <= visualize_audio_limit:
+            if i <= self.visualize_audio_limit:
                 self.writer.add_audio(
                     f"Speech/{name}_Noisy", mixture, epoch, sample_rate=16000
                 )
@@ -106,7 +99,7 @@ class Trainer(BaseTrainer):
                 )
 
             # Visualize waveform
-            if i <= visualize_waveform_limit:
+            if i <= self.visualize_waveform_limit:
                 fig, ax = plt.subplots(3, 1)
                 for j, y in enumerate([mixture, enhanced, clean]):
                     ax[j].set_title(
@@ -129,7 +122,7 @@ class Trainer(BaseTrainer):
                 librosa.stft(clean, n_fft=320, hop_length=160, win_length=320)
             )
 
-            if i <= visualize_spectrogram_limit:
+            if i <= self.visualize_spectrogram_limit:
                 fig, axes = plt.subplots(3, 1, figsize=(6, 6))
                 for k, mag in enumerate([noisy_mag, enhanced_mag, clean_mag,]):
                     axes[k].set_title(
