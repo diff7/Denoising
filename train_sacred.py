@@ -29,7 +29,7 @@ ex.observers.append(
 def main(_config):
     config = DictConfig(_config)
     print(config.pretty(resolve=True))
-    writer = OmniLogger(ex, config.root_dir)
+    writer = OmniLogger(ex, config.base_dir)
     torch.manual_seed(config["seed"])  # for both CPU and GPU
     np.random.seed(config["seed"])
     train_set = DatasetAudio(**dict(config.data.dataset_train))

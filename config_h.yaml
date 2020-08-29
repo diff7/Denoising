@@ -1,5 +1,6 @@
 tag: unet
 seed: 77
+base_dir: outputs
 data:
   dataset_train:
     file_path:  '/home/dev/other/denois/Denoising/files.txt'
@@ -28,7 +29,7 @@ optim:
 loss: mse_loss # l1_lossw
 
 trainer:
-  sample_rate: 22050
+  sample_rate:22050
   resume: False # continue training
   epochs: 1200
   save_checkpoint_interval: 10

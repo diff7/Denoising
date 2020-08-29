@@ -31,9 +31,9 @@ class BaseTrainer:
         # The following args is not in the config file. We will update it if the resume is True in later.
         self.start_epoch = 1
         self.best_score = -np.inf if self.find_max else np.inf
-        self.root_dir = Path(self.root_dir).expanduser().absolute() / self.exp_name
-        self.checkpoints_dir = self.root_dir / "checkpoints"
-        self.logs_dir = self.root_dir / "logs"
+        self.base_dir = Path(self.base_dir).expanduser().absolute() / self.exp_name
+        self.checkpoints_dir = self.base_dir / "checkpoints"
+        self.logs_dir = self.base_dir / "logs"
         prepare_empty_dir([self.checkpoints_dir, self.logs_dir], resume=self.resume)
 
         self.writer = writer
@@ -71,14 +71,14 @@ class BaseTrainer:
         )
 
     def _save_checkpoint(self, epoch, is_best=False):
-        """Save checkpoint to <root_dir>/checkpoints directory.
+        """Save checkpoint to <base_dir>/checkpoints directory.
         It contains:
             - current epoch
             - best score in history
             - optimizer parameters
             - model parameters
         Args:
-            is_best(bool): if current checkpoint got the best score, it also will be saved in <root_dir>/checkpoints/best_model.tar.
+            is_best(bool): if current checkpoint got the best score, it also will be saved in <base_dir>/checkpoints/best_model.tar.
         """
         print(f"\t Saving {epoch} epoch model checkpoint...")
 

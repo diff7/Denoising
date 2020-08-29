@@ -1,5 +1,6 @@
 import importlib
 import time
+from datetime import date
 import os
 
 import librosa
@@ -101,39 +102,11 @@ def reverse_min_max(m, m_max, m_min):
     return m * (m_max - m_min) + m_min
 
 
-def sample_fixed_length_data_aligned(data_a, data_b, sample_length):
-    """sample with fixed length from two dataset
-    """
-    assert len(data_a) == len(data_b), "Inconsistent dataset length, unable to sampling"
-    assert (
-        len(data_a) >= sample_length
-    ), f"len(data_a) is {len(data_a)}, sample_length is {sample_length}."
-
-    frames_total = len(data_a)
-
-    start = np.random.randint(frames_total - sample_length + 1)
-    # print(f"Random crop from: {start}")
-    end = start + sample_length
-
-    return data_a[start:end], data_b[start:end]
-
-
-def compute_STOI(clean_signal, noisy_signal, sr=16000):
-    return stoi(clean_signal, noisy_signal, sr, extended=False)
-
-
-def print_tensor_info(tensor, flag="Tensor"):
-    floor_tensor = lambda float_tensor: int(float(float_tensor) * 1000) / 1000
-    print(flag)
-    print(
-        f"\tmax: {floor_tensor(torch.max(tensor))}, min: {float(torch.min(tensor))}, mean: {floor_tensor(torch.mean(tensor))}, std: {floor_tensor(torch.std(tensor))}"
-    )
-
-
 class OmniLogger:
     def __init__(self, ex, dir):
         self.ex = ex
-        self.dir = dir
+        self.dir = dir + " " + date.today().strftime("%d/%m/%Y")
+        os.makedirs(self.dir, exist_ok=True)
 
     def add_scalar(self, key, value, order):
         self.ex.log_scalar(key, float(value), order)

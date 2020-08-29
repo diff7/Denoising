@@ -3,7 +3,25 @@ import os
 import librosa
 from torch.utils import data
 from torch.utils.data import Dataset
-from util.utils import sample_fixed_length_data_aligned
+
+# from util.utils import sample_fixed_length_data_aligned
+
+
+def sample_fixed_length_data_aligned(data_a, data_b, sample_length):
+    """sample with fixed length from two dataset
+    """
+    assert len(data_a) == len(data_b), "Inconsistent dataset length, unable to sampling"
+    assert (
+        len(data_a) >= sample_length
+    ), f"len(data_a) is {len(data_a)}, sample_length is {sample_length}."
+
+    frames_total = len(data_a)
+
+    start = np.random.randint(frames_total - sample_length + 1)
+    # print(f"Random crop from: {start}")
+    end = start + sample_length
+
+    return data_a[start:end], data_b[start:end]
 
 
 class DatasetAudio(data.Dataset):
