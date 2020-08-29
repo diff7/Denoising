@@ -33,8 +33,11 @@ class BaseTrainer:
         self.best_score = -np.inf if self.find_max else np.inf
         self.base_dir = Path(self.base_dir).expanduser().absolute() / self.exp_name
         self.checkpoints_dir = self.base_dir / "checkpoints"
-        self.logs_dir = self.base_dir / "logs"
-        prepare_empty_dir([self.checkpoints_dir, self.logs_dir], resume=self.resume)
+        logs_dir = self.base_dir / "logs"
+        speech_dir = self.base_dir / "Speech"
+        prepare_empty_dir(
+            [self.checkpoints_dir, logs_dir, speech_dir], resume=self.resume
+        )
 
         self.writer = writer
         if self.resume:

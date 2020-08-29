@@ -109,7 +109,7 @@ def reverse_min_max(m, m_max, m_min):
 class OmniLogger:
     def __init__(self, ex, dir):
         self.ex = ex
-        self.dir = dir + "_" + date.today().strftime("%d/%m/%Y")
+        self.dir = dir + "_" + date.today().strftime("%d_%m")
         os.makedirs(self.dir, exist_ok=True)
 
     def add_scalar(self, key, value, order):

@@ -94,13 +94,13 @@ class Trainer(BaseTrainer):
             # Visualize audio
             if i <= self.visualize_audio_limit:
                 self.writer.add_audio(
-                    f"Speech/{name}_Noisy", mixture, epoch, sr=self.sample_rate
+                    f"speech/{name}_Noisy", mixture, epoch, sr=self.sample_rate
                 )
                 self.writer.add_audio(
-                    f"Speech/{name}_Enhanced", enhanced, epoch, sr=self.sample_rate
+                    f"speech/{name}_Enhanced", enhanced, epoch, sr=self.sample_rate
                 )
                 self.writer.add_audio(
-                    f"Speech/{name}_Clean", clean, epoch, sr=self.sample_rate
+                    f"speech/{name}_Clean", clean, epoch, sr=self.sample_rate
                 )
 
             # Visualize waveform
