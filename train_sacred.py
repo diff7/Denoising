@@ -16,7 +16,7 @@ from sacred.observers import MongoObserver
 from util.utils import OmniLogger
 
 config = OmegaConf.load("config_h.yaml")
-ex = Experiment(config.exp_name)
+ex = Experiment(config.experiment_name)
 ex.add_config(dict(config))
 ex.observers.append(
     MongoObserver.create(
@@ -61,6 +61,7 @@ def main(_config):
     )
 
     trainer.train()
+
 
 if __name__ == "__main__":
     ex.run_commandline()

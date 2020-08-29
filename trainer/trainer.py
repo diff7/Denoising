@@ -84,6 +84,10 @@ class Trainer(BaseTrainer):
             clean = clean.numpy().reshape(-1)
             mixture = mixture.cpu().numpy().reshape(-1)
 
+            print(f"len clean {clean.shape}")
+            print(f"len mixture {mixture.shape}")
+            print(f"len enhanced {enhanced.shape}")
+
             assert len(mixture) == len(enhanced) == len(clean)
 
             # Visualize audio
