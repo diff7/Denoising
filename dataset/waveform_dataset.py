@@ -37,8 +37,8 @@ class DatasetAudio(data.Dataset):
             for line in open(os.path.abspath(os.path.expanduser(file_path)), "r")
         ]
 
-        #dataset_list = dataset_list[offset:]
-        #if limit:
+        # dataset_list = dataset_list[offset:]
+        # if limit:
         #    dataset_list = dataset_list[:limit]
 
         assert mode in (
@@ -63,6 +63,11 @@ class DatasetAudio(data.Dataset):
         clean, _ = librosa.load(
             os.path.abspath(os.path.expanduser(clean_path)), sr=None
         )
+
+        assert len(clean) == len(mixture)
+
+        print(f"len clean {clean.shape}")
+        print(f"len mixture {mixture.shape}")
 
         if self.mode == "train":
             # The input of model should be fixed-length in the training.
