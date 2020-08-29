@@ -34,6 +34,7 @@ trainer:
   find_max: True  # early stop - save best model but keep training
   val_interval: 10
   visualize_waveform_limit: 20
+  visualize_audio_limit: 20
   visualize_spectrogram_limit: 20
   validation_interval: 1
   sample_length: 16384
