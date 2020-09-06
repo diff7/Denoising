@@ -1,73 +1,66 @@
-import argparse
 import os
-
-import json5
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from util.utils import initialize_config
+from omegaconf import OmegaConf, DictConfig
+
+from model.unet_basic import Model as Unet
+from dataset.waveform_dataset import DatasetAudio
+from trainer.trainer import Trainer
+from model.loss import mse_loss, l1_loss
+
+from sacred import Experiment
+from sacred.observers import MongoObserver
+
+from util.utils import OmniLogger
+
+config = OmegaConf.load("config.yaml")
+ex = Experiment(config.experiment_name)
+ex.add_config(dict(config))
+ex.observers.append(
+    MongoObserver.create(
+        url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"
+    )
+)
 
 
-def main(config, resume):
+@ex.main
+def main(_config):
+    config = DictConfig(_config)
+    print(config.pretty(resolve=True))
+    writer = OmniLogger(ex, config.trainer)
     torch.manual_seed(config["seed"])  # for both CPU and GPU
     np.random.seed(config["seed"])
+    train_set = DatasetAudio(**dict(config.data.dataset_train))
+    train_dataloader = DataLoader(dataset=train_set, **config.data.loader_train)
 
-    train_dataloader = DataLoader(
-        dataset=initialize_config(config["train_dataset"]),
-        batch_size=config["train_dataloader"]["batch_size"],
-        num_workers=config["train_dataloader"]["num_workers"],
-        shuffle=config["train_dataloader"]["shuffle"],
-        pin_memory=config["train_dataloader"]["pin_memory"],
+    val_set = DatasetAudio(**config.data.dataset_val)
+    val_dataloader = DataLoader(
+        dataset=val_set, num_workers=1, batch_size=1, shuffle=True
     )
 
-    valid_dataloader = DataLoader(
-        dataset=initialize_config(config["validation_dataset"]),
-        num_workers=1,
-        batch_size=1,
-    )
-
-    model = initialize_config(config["model"])
+    model = Unet(**config.model)
 
     optimizer = torch.optim.Adam(
         params=model.parameters(),
-        lr=config["optimizer"]["lr"],
-        betas=(config["optimizer"]["beta1"], config["optimizer"]["beta2"]),
+        lr=config.optim.lr,
+        betas=(config.optim.beta1, config.optim.beta2),
     )
 
-    loss_function = initialize_config(config["loss_function"])
+    loss_function = globals()[config.loss]()
 
-    trainer_class = initialize_config(config["trainer"], pass_args=False)
-
-    trainer = trainer_class(
-        config=config,
-        resume=resume,
+    trainer = Trainer(
+        config=config.trainer,
         model=model,
+        writer=writer,
         loss_function=loss_function,
         optimizer=optimizer,
         train_dataloader=train_dataloader,
-        validation_dataloader=valid_dataloader,
+        validation_dataloader=val_dataloader,
     )
 
     trainer.train()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Wave-U-Net for Speech Enhancement")
-    parser.add_argument(
-        "-C", "--configuration", required=True, type=str, help="Configuration (*.json)."
-    )
-    parser.add_argument(
-        "-R",
-        "--resume",
-        action="store_true",
-        help="Resume experiment from latest checkpoint.",
-    )
-    args = parser.parse_args()
-
-    configuration = json5.load(open(args.configuration))
-    configuration["experiment_name"], _ = os.path.splitext(
-        os.path.basename(args.configuration)
-    )
-    configuration["config_path"] = args.configuration
-
-    main(configuration, resume=args.resume)
+    ex.run_commandline()

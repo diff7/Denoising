@@ -74,7 +74,7 @@ class DatasetAudio(data.Dataset):
         return self.length
 
     def __getitem__(self, item):
-        mixture_path, clean_path = self.dataset_list[item].split(" ")
+        clean_path, mixture_path = self.dataset_list[item].split(" ")
         filename = os.path.splitext(os.path.basename(mixture_path))[0]
         mixture, _ = librosa.load(
             os.path.abspath(os.path.expanduser(mixture_path)), sr=None

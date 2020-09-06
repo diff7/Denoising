@@ -1,5 +1,12 @@
 # Wave-U-Net-for-Speech-Enhancement
 
+
+- [?] Make train test split and train
+- [?] Refactor code and structure
+- [?] Prepare dataset in Russian
+- [?] Train in Russian
+
+
 Implement [Wave-U-Net](https://arxiv.org/abs/1806.03185) by PyTorch, and migrate it to the speech enhancement.
 
 ![](./doc/tensorboard.png)
@@ -161,7 +168,7 @@ The log information generated during the training process will be stored in`conf
             "visualize_waveform_limit": 20, // The interval of the visualization waveform during validation. The reason for setting this parameter is because the visualization waveform is slow
             "visualize_spectrogram_limit": 20, // Verify the interval of the visualization spectrogram. This parameter is set because the visualization spectrum is slow
             "sample_length": 16384 // See train dataset
-            } 
+            }
         }
     },
     "model": {

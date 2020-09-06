@@ -57,24 +57,24 @@ class ExecutionTime:
         return int(time.time() - self.start_time)
 
 
-def initialize_config(module_cfg, pass_args=True):
-    """According to config items, load specific module dynamically with params.
-    e.g., Config items as follow：
-        module_cfg = {
-            "module": "model.model",
-            "main": "Model",
-            "args": {...}
-        }
-    1. Load the module corresponding to the "module" param.
-    2. Call function (or instantiate class) corresponding to the "main" param.
-    3. Send the param (in "args") into the function (or class) when calling ( or instantiating)
-    """
-    module = importlib.import_module(module_cfg["module"])
-
-    if pass_args:
-        return getattr(module, module_cfg["main"])(**module_cfg["args"])
-    else:
-        return getattr(module, module_cfg["main"])
+# def initialize_config(module_cfg, pass_args=True):
+#     """According to config items, load specific module dynamically with params.
+#     e.g., Config items as follow：
+#         module_cfg = {
+#             "module": "model.model",
+#             "main": "Model",
+#             "args": {...}
+#         }
+#     1. Load the module corresponding to the "module" param.
+#     2. Call function (or instantiate class) corresponding to the "main" param.
+#     3. Send the param (in "args") into the function (or class) when calling ( or instantiating)
+#     """
+#     module = importlib.import_module(module_cfg["module"])
+#
+#     if pass_args:
+#         return getattr(module, module_cfg["main"])(**module_cfg["args"])
+#     else:
+#         return getattr(module, module_cfg["main"])
 
 
 def compute_STOI(clean_signal, noisy_signal, sr=16000):
@@ -107,26 +107,29 @@ def reverse_min_max(m, m_max, m_min):
 
 
 class OmniLogger:
-    def __init__(self, ex, dir):
+    def __init__(self, ex, trainer_conf):
         self.ex = ex
-        self.dir = dir + "_" + date.today().strftime("%d_%m")
+        self.dir = os.path.join(trainer_conf.base_dir, trainer_conf.exp_name)
+        self.speech_path = os.path.join(
+            trainer_conf.base_dir, trainer_conf.exp_name, trainer_conf.speech_dir
+        )
         os.makedirs(self.dir, exist_ok=True)
 
-    def add_scalar(self, key, value, order):
+    def add_scalars(self, key, value, order):
         self.ex.log_scalar(key, float(value), order)
 
     def add_audio(self, name, array, epoch, sr):
-        name = f"ep_{epoch}_{name}.wav"
-        full_path = os.path.join(self.dir, name)
+        name = f"{name}_ep_{epoch}.wav"
+        full_path = os.path.join(self.speech_path, name)
         write(full_path, sr, array)
         self.ex.add_artifact(full_path, name)
 
     def add_image(self, name, array):
-        full_path = os.path.join(self.dir, name)
+        full_path = os.path.join(self.speech_path, name)
         self.ex.add_artifact(full_path, name)
 
     def add_figure(self, name, fig, epoch):
-        name = f"ep_{epoch}_{name}.png"
-        full_path = os.path.join(self.dir, name)
+        name = f"{name}_ep_{epoch}.png"
+        full_path = os.path.join(self.speech_path, name)
         fig.savefig(full_path)
         self.ex.add_artifact(full_path, name)

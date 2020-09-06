@@ -34,7 +34,7 @@ class BaseTrainer:
         self.base_dir = Path(self.base_dir).expanduser().absolute() / self.exp_name
         self.checkpoints_dir = self.base_dir / "checkpoints"
         logs_dir = self.base_dir / "logs"
-        speech_dir = self.base_dir / "Speech"
+        speech_dir = self.base_dir / self.speech_dir
         prepare_empty_dir(
             [self.checkpoints_dir, logs_dir, speech_dir], resume=self.resume
         )

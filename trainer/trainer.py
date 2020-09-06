@@ -1,5 +1,6 @@
 import librosa
 import librosa.display
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -28,6 +29,7 @@ class Trainer(BaseTrainer):
     def _train_epoch(self, epoch):
         loss_total = 0.0
 
+        print(f" Train loader size {len(self.train_data_loader)}")
         for i, (mixture, clean, name) in enumerate(self.train_data_loader):
             mixture = mixture.to(self.device)
             clean = clean.to(self.device)
@@ -41,16 +43,16 @@ class Trainer(BaseTrainer):
             loss_total += loss.item()
 
         dl_len = len(self.train_data_loader)
-        self.writer.add_scalar(f"Train/Loss", loss_total / dl_len, epoch)
+        self.writer.add_scalars(f"Train/Loss", loss_total / dl_len, epoch)
 
     @torch.no_grad()
     def _validation_epoch(self, epoch):
-
         stoi_c_n = []  # clean and noisy
         stoi_c_e = []  # clean and enhanced
         pesq_c_n = []
         pesq_c_e = []
 
+        pbar = tqdm(total=len(self.validation_data_loader))
         for i, (mixture, clean, name) in enumerate(self.validation_data_loader):
             assert len(name) == 1, "Only support batch size is 1 in enhancement stage."
 
@@ -94,13 +96,13 @@ class Trainer(BaseTrainer):
             # Visualize audio
             if i <= self.visualize_audio_limit:
                 self.writer.add_audio(
-                    f"speech/{name}_Noisy", mixture, epoch, sr=self.sample_rate
+                    f"Audio_{name}_Noisy", mixture, epoch, sr=self.sample_rate
                 )
                 self.writer.add_audio(
-                    f"speech/{name}_Enhanced", enhanced, epoch, sr=self.sample_rate
+                    f"Audio_{name}_Enhanced", enhanced, epoch, sr=self.sample_rate
                 )
                 self.writer.add_audio(
-                    f"speech/{name}_Clean", clean, epoch, sr=self.sample_rate
+                    f"Audio_{name}_Clean", clean, epoch, sr=self.sample_rate
                 )
 
             # Visualize waveform
@@ -112,9 +114,9 @@ class Trainer(BaseTrainer):
                             np.mean(y), np.std(y), np.max(y), np.min(y)
                         )
                     )
-                    librosa.display.waveplot(y, sr=16000, ax=ax[j])
+                    librosa.display.waveplot(y, sr=self.sample_rate, ax=ax[j])
                 plt.tight_layout()
-                self.writer.add_figure(f"Waveform/{name}", fig, epoch)
+                self.writer.add_figure(f"Waveform_{name}", fig, epoch)
 
             # Visualize spectrogram
             noisy_mag, _ = librosa.magphase(
@@ -141,30 +143,39 @@ class Trainer(BaseTrainer):
                         cmap="magma",
                         y_axis="linear",
                         ax=axes[k],
-                        sr=16000,
+                        sr=self.sample_rate,
                     )
                 plt.tight_layout()
-                self.writer.add_figure(f"Spectrogram/{name}", fig, epoch)
+                self.writer.add_figure(f"Spectrogram_{name}", fig, epoch)
+
+            limits = [
+                self.visualize_spectrogram_limit,
+                self.visualize_waveform_limit,
+                self.visualize_audio_limit,
+            ]
+            finished_adding_images = i > max(limits)
+            if finished_adding_images:
+                pbar.update(1)
 
             # Metric
-            stoi_c_n.append(compute_STOI(clean, mixture, sr=16000))
-            stoi_c_e.append(compute_STOI(clean, enhanced, sr=16000))
-            pesq_c_n.append(compute_PESQ(clean, mixture, sr=16000))
-            pesq_c_e.append(compute_PESQ(clean, enhanced, sr=16000))
+            stoi_c_n.append(compute_STOI(clean, mixture, sr=self.sample_rate))
+            stoi_c_e.append(compute_STOI(clean, enhanced, sr=self.sample_rate))
+            pesq_c_n.append(compute_PESQ(clean, mixture, sr=self.sample_rate))
+            pesq_c_e.append(compute_PESQ(clean, enhanced, sr=self.sample_rate))
 
         get_metrics_ave = lambda metrics: np.sum(metrics) / len(metrics)
         self.writer.add_scalars(
-            f"Metric/STOI Clean and noisy", get_metrics_ave(stoi_c_n), epoch
+            f"STOI Clean and noisy", get_metrics_ave(stoi_c_n), epoch
         )
         self.writer.add_scalars(
-            f"Metric/STOI Clean and enhanced", get_metrics_ave(stoi_c_e), epoch
+            f"STOI Clean and enhanced", get_metrics_ave(stoi_c_e), epoch
         )
 
         self.writer.add_scalars(
-            f"Metric/PESQ Clean and noisy", get_metrics_ave(pesq_c_n), epoch
+            f"PESQ Clean and noisy", get_metrics_ave(pesq_c_n), epoch
         )
         self.writer.add_scalars(
-            f"Metric/PESQ Clean and enhanced", get_metrics_ave(pesq_c_e), epoch
+            f"PESQ Clean and enhanced", get_metrics_ave(pesq_c_e), epoch
         )
 
         score = (
