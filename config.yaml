@@ -2,12 +2,12 @@ tag: unet
 seed: 77
 data:
   dataset_train:
-    file_path:  '/home/dev/other/denois/Denoising/files_debug.txt'
+    file_path:  '/home/dev/other/denois/train.txt'
     sample_length: 16384
     mode: 'train'
 
   dataset_val:
-    file_path: '/home/dev/other/denois/Denoising/files_debug.txt'
+    file_path: '/home/dev/other/denois/val.txt'
     sample_length: 16384
     mode: 'validation'
 
@@ -21,7 +21,7 @@ model:
   channels_interval:  24
 
 optim:
-  lr: 0.001
+  lr: 0.0001
   beta1: 0.9
   beta2: 0.009
 
@@ -31,15 +31,14 @@ trainer:
   sample_rate: 16000  #16000
   resume: False # continue training
   epochs: 1200
-  save_checkpoint_interval: 10
+  save_checkpoint_interval: 15
   find_max: True  # early stop - save best model but keep training
-  val_interval: 10
   visualize_waveform_limit: 5
   visualize_audio_limit: 5
   visualize_spectrogram_limit: 5
-  validation_interval: 1
+  validation_interval: 15
   sample_length: 16384
-  base_dir: './outputs/'
+  base_dir: './'
   speech_dir: 'speech'
-  exp_name: debug
+  exp_name: train_eng
   cudnn_deterministic: True

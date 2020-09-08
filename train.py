@@ -12,10 +12,10 @@ from model.loss import mse_loss, l1_loss
 from sacred import Experiment
 from sacred.observers import MongoObserver
 
-from util.utils import OmniLogger
+from utils import OmniLogger
 
 config = OmegaConf.load("config.yaml")
-ex = Experiment(config.experiment_name)
+ex = Experiment(config.exp_name)
 ex.add_config(dict(config))
 ex.observers.append(
     MongoObserver.create(

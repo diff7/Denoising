@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from trainer.base_trainer import BaseTrainer
-from util.utils import compute_STOI, compute_PESQ
+from utils import compute_STOI, compute_PESQ
 
 # plt.switch_backend("agg")
 

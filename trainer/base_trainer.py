@@ -4,8 +4,7 @@ import torch
 import numpy as np
 from pathlib import Path
 from torch.optim.lr_scheduler import StepLR
-from util import visualization
-from util.utils import prepare_empty_dir, ExecutionTime
+from utils import prepare_empty_dir, ExecutionTime
 
 
 class BaseTrainer:

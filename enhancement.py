@@ -7,16 +7,32 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from util.utils import initialize_config, load_checkpoint
+from utils import initialize_config, load_checkpoint
 
 """
 Parameters
 """
 parser = argparse.ArgumentParser("Wave-U-Net: Speech Enhancement")
-parser.add_argument("-C", "--config", type=str, required=True, help="Model and dataset for enhancement (*.json).")
-parser.add_argument("-D", "--device", default="-1", type=str, help="GPU for speech enhancement. default: CPU")
-parser.add_argument("-O", "--output_dir", type=str, required=True, help="Where are audio save.")
-parser.add_argument("-M", "--model_checkpoint_path", type=str, required=True, help="Checkpoint.")
+parser.add_argument(
+    "-C",
+    "--config",
+    type=str,
+    required=True,
+    help="Model and dataset for enhancement (*.json).",
+)
+parser.add_argument(
+    "-D",
+    "--device",
+    default="-1",
+    type=str,
+    help="GPU for speech enhancement. default: CPU",
+)
+parser.add_argument(
+    "-O", "--output_dir", type=str, required=True, help="Where are audio save."
+)
+parser.add_argument(
+    "-M", "--model_checkpoint_path", type=str, required=True, help="Checkpoint."
+)
 args = parser.parse_args()
 
 """
@@ -32,7 +48,9 @@ assert os.path.exists(output_dir), "Enhanced directory should be exist."
 DataLoader
 """
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-dataloader = DataLoader(dataset=initialize_config(config["dataset"]), batch_size=1, num_workers=0)
+dataloader = DataLoader(
+    dataset=initialize_config(config["dataset"]), batch_size=1, num_workers=0
+)
 
 """
 Model
@@ -56,7 +74,9 @@ for mixture, name in tqdm(dataloader):
     # The input of the model should be fixed length.
     if mixture.size(-1) % sample_length != 0:
         padded_length = sample_length - (mixture.size(-1) % sample_length)
-        mixture = torch.cat([mixture, torch.zeros(1, 1, padded_length, device=device)], dim=-1)
+        mixture = torch.cat(
+            [mixture, torch.zeros(1, 1, padded_length, device=device)], dim=-1
+        )
 
     assert mixture.size(-1) % sample_length == 0 and mixture.dim() == 3
     mixture_chunks = list(torch.split(mixture, sample_length, dim=-1))
