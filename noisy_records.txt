@@ -148,3 +148,13 @@
 ../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000516.wav ./dataset_mixed/strashnaya_minuta_s000516_snr5_snr20_idx8.wav
 ../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000516.wav ./dataset_mixed/strashnaya_minuta_s000516_snr5_snr20_idx7.wav
 ../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000516.wav ./dataset_mixed/strashnaya_minuta_s000516_snr5_snr20_idx9.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx0.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx1.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx3.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx5.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx6.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx2.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx4.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx7.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx8.wav
+../ru_audio/ru_RU/by_book/female/hajdurova/strashnaya_minuta/wavs/strashnaya_minuta_s000312.wav ./dataset_mixed/strashnaya_minuta_s000312_snr20_idx9.wav
