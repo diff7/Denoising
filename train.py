@@ -1,17 +1,15 @@
 import os
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-from omegaconf import OmegaConf, DictConfig
-
-from model.unet_basic import Model as Unet
-from dataset.waveform_dataset import DatasetAudio
-from trainer.trainer import Trainer
-from model.loss import mse_loss, l1_loss
-
+from omegaconf import DictConfig, OmegaConf
 from sacred import Experiment
 from sacred.observers import MongoObserver
+from torch.utils.data import DataLoader
 
+from dataset.waveform_dataset import DatasetAudio
+from model.loss import l1_loss, mse_loss
+from model.unet_basic import Model as Unet
+from trainer.trainer import Trainer
 from utils import OmniLogger
 
 config = OmegaConf.load("config.yaml")
@@ -22,7 +20,6 @@ ex.observers.append(
         url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"
     )
 )
-
 
 @ex.main
 def main(_config):

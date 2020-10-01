@@ -1,5 +1,7 @@
 
 *.ipynb_*
-outputs/
-train_eng/
+/outputs/
+/train_eng/
 *.wav
+/dataset/
+/dataset_mixed/

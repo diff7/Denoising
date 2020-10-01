@@ -1,0 +1,11 @@
+clean_files_txt : 'clean.txt'
+noise_sr: 44100
+source_sr: 16000
+resample: true
+noise_files_txt : 'noisy.txt'
+snr_min: 2
+snr_max: 20
+workers: 3
+num_copies: 10
+result_dir: '../../noisy_files'
+save_records: 'noisy_records.txt'
