@@ -9,8 +9,7 @@ from torch.utils.data import Dataset
 
 
 def sample_fixed_length_data_aligned(data_a, data_b, sample_length):
-    """sample with fixed length from two dataset
-    """
+    """sample with fixed length from two dataset"""
     assert len(data_a) == len(data_b), "Inconsistent dataset length, unable to sampling"
     assert (
         len(data_a) >= sample_length
@@ -92,4 +91,5 @@ class DatasetAudio(data.Dataset):
             )
             return mixture.reshape(1, -1), clean.reshape(1, -1), filename
         else:
+            # TODO Rewrite val with collate to match longest file in the batch.
             return mixture.reshape(1, -1), clean.reshape(1, -1), filename
