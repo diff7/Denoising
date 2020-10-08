@@ -131,7 +131,13 @@ class Trainer(BaseTrainer):
 
             if i <= self.visualize_spectrogram_limit:
                 fig, axes = plt.subplots(3, 1, figsize=(6, 6))
-                for k, mag in enumerate([noisy_mag, enhanced_mag, clean_mag,]):
+                for k, mag in enumerate(
+                    [
+                        noisy_mag,
+                        enhanced_mag,
+                        clean_mag,
+                    ]
+                ):
                     axes[k].set_title(
                         f"mean: {np.mean(mag):.3f}, "
                         f"std: {np.std(mag):.3f}, "
