@@ -8,30 +8,30 @@ from torch.utils.data import Dataset
 # from util.utils import sample_fixed_length_data_aligned
 
 
-def sample_fixed_length_data_aligned(data_a, data_b, sample_length):
+def sample_fixed_length_data_aligned(data_a, data_b, sample_len):
     """sample with fixed length from two dataset"""
     assert len(data_a) == len(data_b), "Inconsistent dataset length, unable to sampling"
     assert (
-        len(data_a) >= sample_length
-    ), f"len(data_a) is {len(data_a)}, sample_length is {sample_length}."
+        len(data_a) >= sample_len
+    ), f"len(data_a) is {len(data_a)}, sample_len is {sample_len}."
 
     frames_total = len(data_a)
 
-    start = np.random.randint(frames_total - sample_length + 1)
+    start = np.random.randint(frames_total - sample_len + 1)
     # print(f"Random crop from: {start}")
-    end = start + sample_length
+    end = start + sample_len
 
     return data_a[start:end], data_b[start:end]
 
 
 class DatasetAudio(data.Dataset):
-    def __init__(self, file_path, sample_length=16384, mode="train"):
+    def __init__(self, file_path, sample_len=16384, mode="train"):
         """Construct dataset for training and validation.
         Args:
             dataset (str): *.txt, the path of the dataset list file. See "Notes."
             limit (int): Return at most limit files in the list. If None, all files are returned.
             offset (int): Return files starting at an offset within the list. Use negative values to offset from the end of the list.
-            sample_length(int): The model only supports fixed-length input. Use sample_length to specify the feature size of the input.
+            sample_len(int): The model only supports fixed-length input. Use sample_len to specify the feature size of the input.
             mode(str): If mode is "train", return fixed-length signals. If mode is "validation", return original-length signals.
 
         Notes:
@@ -66,7 +66,7 @@ class DatasetAudio(data.Dataset):
 
         self.length = len(dataset_list)
         self.dataset_list = dataset_list
-        self.sample_length = sample_length
+        self.sample_len = sample_len
         self.mode = mode
 
     def __len__(self):
@@ -87,7 +87,7 @@ class DatasetAudio(data.Dataset):
         if self.mode == "train":
             # The input of model should be fixed-length in the training.
             mixture, clean = sample_fixed_length_data_aligned(
-                mixture, clean, self.sample_length
+                mixture, clean, self.sample_len
             )
             return mixture.reshape(1, -1), clean.reshape(1, -1), filename
         else:

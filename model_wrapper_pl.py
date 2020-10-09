@@ -12,29 +12,28 @@ from utils import compute_STOI, compute_PESQ
 
 
 class Plwrap(pl.LightningModule):
-    def __init__(
-        self,
-        cfg,
-        model,
-        writer,
-        loss_fn):
+    def __init__(self, cfg, model, writer, loss_fn):
+        super().__init__()
+        self.model = model
+        self.loss_fn = loss_fn
+        self.metric = writer
+        self.cfg = cfg
+        self.sample_len = cfg.sample_len
+        self.sample_rate = cfg.trainer.sample_rate
+        self.writer = writer
 
-    self.model = model
-    self.loss_fn = loss_fn
-    self.metric = writer
-    self.cfg = cfg
-    self.sample_len = cfg.sample_len
-    
     def configure_optimizers(self):
-        return optim.Adam(self.model.parameters(), lr=cfg.optim.lr, weight_decay=1e-06)
+        return optim.Adam(
+            self.model.parameters(), lr=self.cfg.optim.lr, weight_decay=1e-06
+        )
 
     def forward(self, inp):
         out = self.model(inp)
         return out
 
     def training_step(self, batch, batch_nb):
-        noisy_mix, clean, _  = batch
-        
+        noisy_mix, clean, _ = batch
+
         self.optimizer.zero_grad()
         enhanced = self.forward(noisy_mix)
         loss = self.loss_fun(clean, enhanced)
@@ -45,11 +44,16 @@ class Plwrap(pl.LightningModule):
 
     def validation_step(self, batch, batch_nb):
         # NOTE: Validation is super slow and done on gpu
-        device = torch.cuda.device(f'cuda:{self.trainer.root_gpu}')
+        if self.trainer.root_gpu is not None:
+            device = self.trainer.root_gpu
+        else:
+            device = "cpu"
 
         noisy_mix, clean, name = batch
         assert len(name) == 1, "Only support batch size is 1 in val/enhancement stage."
-        assert len(noisy_mix) == len(clean), "Lenght of noisy and clean files does not match"
+        assert len(noisy_mix) == len(
+            clean
+        ), "Lenght of noisy and clean files does not match"
 
         name = name[0]
         padded_length = 0
@@ -57,15 +61,17 @@ class Plwrap(pl.LightningModule):
         # The input of the model should be fixed length.
         if noisy_mix.size(-1) % self.sample_len != 0:
             padded_length = self.sample_len - (noisy_mix.size(-1) % self.sample_len)
-            noisy_mix = torch.cat([noisy_mix, torch.zeros(1, 1, padded_length, device=device)],
-                                dim=-1)
+            noisy_mix = torch.cat(
+                [noisy_mix, torch.zeros(size=(1, 1, padded_length), device=device)],
+                dim=-1,
+            )
 
-        assert noisy_mix.size(-1) % self.sample_length == 0 and noisy_mix.dim() == 3
-        noisy_chunks = list(torch.split(noisy_mix, self.sample_length, dim=-1))
+        assert noisy_mix.size(-1) % self.cfg.sample_len == 0 and noisy_mix.dim() == 3
+        noisy_chunks = list(torch.split(noisy_mix, self.cfg.sample_len, dim=-1))
 
-        # Get enhanced full audio 
+        # Get enhanced full audio
         enhanced_chunks = [self.model(chunk).detach().cpu() for chunk in noisy_chunks]
-        enhanced = torch.cat(enhanced_chunks, dim=-1)  
+        enhanced = torch.cat(enhanced_chunks, dim=-1)
 
         if padded_length != 0:
             enhanced = enhanced[:, :, :-padded_length]
@@ -75,51 +81,59 @@ class Plwrap(pl.LightningModule):
         clean = clean.numpy().reshape(-1)
         noisy_mix = noisy_mix.cpu().numpy().reshape(-1)
 
-
         stoi_c_n = compute_STOI(clean, noisy_mix, sr=self.sample_rate)
         stoi_c_e = compute_STOI(clean, enhanced, sr=self.sample_rate)
         pesq_c_n = compute_PESQ(clean, noisy_mix, sr=self.sample_rate)
         pesq_c_e = compute_PESQ(clean, enhanced, sr=self.sample_rate)
-    
-        if batch_nb <= self.visualize_waveform_limit:
-            self.visualize_waveform(noisy_mix, enhanced, clean, self.current_epoch, name)
-            self.visualize_spectrogram(noisy_mix, enhanced, clean, self.current_epoch, name)
-            self.write_audio_samples(noisy_mix, enhanced, clean, self.current_epoch, name)
 
-        return {"stoi_c_n": stoi_c_n, 
-                "stoi_c_e": stoi_c_e, 
-                "pesq_c_n": pesq_c_n, 
-                "pesq_c_e": pesq_c_e}
+        if batch_nb <= self.cfg.trainer.visualize_waveform_limit:
+            self.visualize_waveform(
+                noisy_mix, enhanced, clean, self.current_epoch, name
+            )
+            self.visualize_spectrogram(
+                noisy_mix, enhanced, clean, self.current_epoch, name
+            )
+            self.write_audio_samples(
+                noisy_mix, enhanced, clean, self.current_epoch, name
+            )
+
+        return {
+            "stoi_c_n": stoi_c_n,
+            "stoi_c_e": stoi_c_e,
+            "pesq_c_n": pesq_c_n,
+            "pesq_c_e": pesq_c_e,
+        }
 
     @staticmethod
     def _transform_pesq_range(pesq_score):
-        """transform PESQ range. From [-0.5 ~ 4.5] to [0 ~ 1].
-        """
+        """transform PESQ range. From [-0.5 ~ 4.5] to [0 ~ 1]."""
         return (pesq_score + 0.5) / 5
 
     def validation_epoch_end(self, validation_step_outputs):
-        get_metrics_ave = lambda key: np.array([m[key] for m in validation_step_outputs]).mean()
+        get_metrics_ave = lambda key: np.array(
+            [m[key] for m in validation_step_outputs]
+        ).mean()
         epoch = self.current_epoch
 
         self.writer.add_scalars(
-            f"STOI Clean and noisy", get_metrics_ave('stoi_c_n'), epoch
+            f"STOI Clean and noisy", get_metrics_ave("stoi_c_n"), epoch
         )
         self.writer.add_scalars(
-            f"STOI Clean and enhanced", get_metrics_ave('stoi_c_e'), epoch
+            f"STOI Clean and enhanced", get_metrics_ave("stoi_c_e"), epoch
         )
 
         self.writer.add_scalars(
-            f"PESQ Clean and noisy", get_metrics_ave('pesq_c_n'), epoch
+            f"PESQ Clean and noisy", get_metrics_ave("pesq_c_n"), epoch
         )
         self.writer.add_scalars(
-            f"PESQ Clean and enhanced", get_metrics_ave('pesq_c_e'), epoch
+            f"PESQ Clean and enhanced", get_metrics_ave("pesq_c_e"), epoch
         )
 
         score = (
-            get_metrics_ave('stoi_c_e')
-            + self._transform_pesq_range(get_metrics_ave('pesq_c_e'))
+            get_metrics_ave("stoi_c_e")
+            + self._transform_pesq_range(get_metrics_ave("pesq_c_e"))
         ) / 2
-        return  {"score": torch.tensor(score)}
+        return {"score": torch.tensor(score)}
 
         # LOGGING FUNCS:
         # NOTE: move funcs to writer later
@@ -143,7 +157,7 @@ class Plwrap(pl.LightningModule):
                     np.mean(y), np.std(y), np.max(y), np.min(y)
                 )
             )
-            librosa.display.waveplot(y, sr=self.cfg.sample_rate, ax=ax[j])
+            librosa.display.waveplot(y, sr=self.sample_rate, ax=ax[j])
         plt.tight_layout()
         self.writer.add_figure(f"Waveform_{name}", fig, epoch)
 
@@ -157,7 +171,7 @@ class Plwrap(pl.LightningModule):
         clean_mag, _ = librosa.magphase(
             librosa.stft(clean, n_fft=320, hop_length=160, win_length=320)
         )
-            
+
         fig, axes = plt.subplots(3, 1, figsize=(6, 6))
         for k, mag in enumerate(
             [
@@ -177,7 +191,7 @@ class Plwrap(pl.LightningModule):
                 cmap="magma",
                 y_axis="linear",
                 ax=axes[k],
-                sr=self.cfg.sample_rate,
+                sr=self.sample_rate,
             )
         plt.tight_layout()
         self.writer.add_figure(f"Spectrogram_{name}", fig, epoch)

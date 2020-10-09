@@ -91,9 +91,9 @@ class OmniLogger:
         self.ex = ex
         self.dir = os.path.join(trainer_conf.base_dir, trainer_conf.exp_name)
         self.speech_path = os.path.join(
-            trainer_conf.base_dir, trainer_conf.exp_name, trainer_conf.speech_dir
+            trainer_conf.base_dir, trainer_conf.exp_name, trainer_conf.spectro_dir
         )
-        os.makedirs(self.dir, exist_ok=True)
+        os.makedirs(self.speech_path, exist_ok=True)
 
     def add_scalars(self, key, value, order):
         self.ex.log_scalar(key, float(value), order)

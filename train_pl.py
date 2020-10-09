@@ -32,15 +32,20 @@ def main(_config):
     print(config.pretty(resolve=True))
     writer = OmniLogger(ex, config.trainer)
 
-    torch.manual_seed(config["seed"])  # for both CPU and GPU
-    np.random.seed(config["seed"])
+    torch.manual_seed(cfg.seed)  # for both CPU and GPU
+    np.random.seed(cfg.seed)
 
     loss_function = globals()[config.loss]()
 
-    train_set = DatasetAudio(**dict(config.data.dataset_train))
-    train_dataloader = DataLoader(dataset=train_set, **config.data.loader_train)
+    train_set = DatasetAudio(
+        **dict(config.data.dataset_train), sample_len=cfg.sample_len
+    )
+    train_dataloader = DataLoader(
+        dataset=train_set,
+        **config.data.loader_train,
+    )
 
-    val_set = DatasetAudio(**config.data.dataset_val)
+    val_set = DatasetAudio(**config.data.dataset_val, sample_len=cfg.sample_len)
     val_dataloader = DataLoader(
         dataset=val_set, num_workers=1, batch_size=1, shuffle=True
     )
@@ -52,18 +57,19 @@ def main(_config):
         filepath=os.path.join("./check_points"),
         verbose=True,
         monitor="score",
-        mode="max"
-        save_weights_only = True,
+        mode="max",
+        save_weights_only=True,
     )
 
     trainer = pl.Trainer(
-        max_epochs=cfgt.rainer["epochs"],
-        gpus=1,
-        auto_select_gpus=True,
+        max_epochs=cfg.trainer.epochs,
+        gpus=0,
+        auto_select_gpus=False,
         checkpoint_callback=checkpoint_callback,
     )
 
     trainer.fit(model_pl, train_dataloader, val_dataloader)
+
 
 if __name__ == "__main__":
     ex.run_commandline()

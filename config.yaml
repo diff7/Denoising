@@ -1,14 +1,13 @@
-tag: unet
+tag: unet_pl_test
 seed: 77
+sample_len: 16384
 data:
   dataset_train:
     file_path:  '/home/dev/other/denois/train.txt'
-    sample_length: 16384
     mode: 'train'
 
   dataset_val:
     file_path: '/home/dev/other/denois/val.txt'
-    sample_length: 16384
     mode: 'validation'
 
   loader_train:
@@ -36,6 +35,6 @@ trainer:
   validation_interval: 15
   sample_length: 16384
   base_dir: './'
-  speech_dir: 'speech'
-  exp_name: train_eng
+  spectro_dir: 'speech'
+  exp_name: unet_pl_test
   cudnn_deterministic: True
