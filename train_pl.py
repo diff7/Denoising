@@ -9,7 +9,11 @@ from torch.utils.data import DataLoader
 from dataset.waveform_dataset import DatasetAudio
 from model.loss import l1_loss, mse_loss
 from model.unet_basic import Model as Unet
-from trainer.trainer import Trainer
+
+import pytorch_lightning as pl
+from pytorch_lightning.callbacks import ModelCheckpoint
+
+from model_wrapper_pl import Plwrap
 from utils import OmniLogger
 
 config = OmegaConf.load("config.yaml")
@@ -21,13 +25,18 @@ ex.observers.append(
     )
 )
 
+
 @ex.main
 def main(_config):
-    config = DictConfig(_config)
+    cfg = DictConfig(_config)
     print(config.pretty(resolve=True))
     writer = OmniLogger(ex, config.trainer)
+
     torch.manual_seed(config["seed"])  # for both CPU and GPU
     np.random.seed(config["seed"])
+
+    loss_function = globals()[config.loss]()
+
     train_set = DatasetAudio(**dict(config.data.dataset_train))
     train_dataloader = DataLoader(dataset=train_set, **config.data.loader_train)
 
@@ -37,27 +46,24 @@ def main(_config):
     )
 
     model = Unet(**config.model)
+    model_pl = Plwrap(cfg, model, writer, loss_function)
 
-    optimizer = torch.optim.Adam(
-        params=model.parameters(),
-        lr=config.optim.lr,
-        betas=(config.optim.beta1, config.optim.beta2),
+    checkpoint_callback = ModelCheckpoint(
+        filepath=os.path.join("./check_points"),
+        verbose=True,
+        monitor="score",
+        mode="max"
+        save_weights_only = True,
     )
 
-    loss_function = globals()[config.loss]()
-
-    trainer = Trainer(
-        config=config.trainer,
-        model=model,
-        writer=writer,
-        loss_function=loss_function,
-        optimizer=optimizer,
-        train_dataloader=train_dataloader,
-        validation_dataloader=val_dataloader,
+    trainer = pl.Trainer(
+        max_epochs=cfgt.rainer["epochs"],
+        gpus=1,
+        auto_select_gpus=True,
+        checkpoint_callback=checkpoint_callback,
     )
 
-    trainer.train()
-
+    trainer.fit(model_pl, train_dataloader, val_dataloader)
 
 if __name__ == "__main__":
     ex.run_commandline()

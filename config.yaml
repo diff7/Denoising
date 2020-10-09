@@ -22,8 +22,6 @@ model:
 
 optim:
   lr: 0.0001
-  beta1: 0.9
-  beta2: 0.009
 
 loss: mse_loss # l1_lossw
 
@@ -32,7 +30,6 @@ trainer:
   resume: False # continue training
   epochs: 1200
   save_checkpoint_interval: 15
-  find_max: True  # early stop - save best model but keep training
   visualize_waveform_limit: 5
   visualize_audio_limit: 5
   visualize_spectrogram_limit: 5
