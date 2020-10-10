@@ -31,7 +31,7 @@ trainer:
   visualize_waveform_limit: 5
   visualize_audio_limit: 5
   visualize_spectrogram_limit: 5
-  validation_interval: 15
+  validation_interval: 1/10
   sample_length: 16384
   base_dir: '../results/'
   spectro_dir: 'speech'
