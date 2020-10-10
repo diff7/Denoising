@@ -10,53 +10,6 @@ from pystoi.stoi import stoi
 from scipy.io.wavfile import write
 
 
-def load_checkpoint(checkpoint_path, device):
-    _, ext = os.path.splitext(os.path.basename(checkpoint_path))
-    assert ext in (
-        ".pth",
-        ".tar",
-    ), "Only support ext and tar extensions of model checkpoint."
-    model_checkpoint = torch.load(checkpoint_path, map_location=device)
-
-    if ext == ".pth":
-        print(f"Loading {checkpoint_path}.")
-        return model_checkpoint
-    else:  # tar
-        print(f"Loading {checkpoint_path}, epoch = {model_checkpoint['epoch']}.")
-        return model_checkpoint["model"]
-
-
-def prepare_empty_dir(dirs, resume=False):
-    """
-    if resume experiment, assert the dirs exist,
-    if not resume experiment, make dirs.
-
-    Args:
-        dirs (list): directors list
-        resume (bool): whether to resume experiment, default is False
-    """
-    for dir_path in dirs:
-        if resume:
-            assert dir_path.exists()
-        else:
-            dir_path.mkdir(parents=True, exist_ok=True)
-
-
-class ExecutionTime:
-    """
-    Usage:
-        timer = ExecutionTime()
-        <Something...>
-        print(f'Finished in {timer.duration()} seconds.')
-    """
-
-    def __init__(self):
-        self.start_time = time.time()
-
-    def duration(self):
-        return int(time.time() - self.start_time)
-
-
 def compute_STOI(clean_signal, noisy_signal, sr=16000):
     return stoi(clean_signal, noisy_signal, sr, extended=False)
 

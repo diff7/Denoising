@@ -34,11 +34,8 @@ class Plwrap(pl.LightningModule):
     def training_step(self, batch, batch_nb):
         noisy_mix, clean, _ = batch
 
-        self.optimizer.zero_grad()
         enhanced = self.forward(noisy_mix)
-        loss = self.loss_fun(clean, enhanced)
-        loss.backward()
-        self.optimizer.step()
+        loss = self.loss_fn(clean, enhanced)
         self.writer.add_scalars(f"Train/Loss", loss.item(), batch_nb)
         return {"loss": loss}
 
@@ -77,8 +74,8 @@ class Plwrap(pl.LightningModule):
             enhanced = enhanced[:, :, :-padded_length]
             noisy_mix = noisy_mix[:, :, :-padded_length]
 
-        enhanced = enhanced.reshape(-1).numpy()
-        clean = clean.numpy().reshape(-1)
+        enhanced = enhanced.reshape(-1).detach().cpu().numpy()
+        clean = clean.cpu().numpy().reshape(-1)
         noisy_mix = noisy_mix.cpu().numpy().reshape(-1)
 
         stoi_c_n = compute_STOI(clean, noisy_mix, sr=self.sample_rate)
@@ -140,14 +137,12 @@ class Plwrap(pl.LightningModule):
 
     def write_audio_samples(self, noisy_mix, enhanced, clean, epoch, name):
         self.writer.add_audio(
-            f"Audio_{name}_Noisy", noisy_mix, epoch, sr=self.cfg.sample_rate
+            f"Audio_{name}_Noisy", noisy_mix, epoch, sr=self.sample_rate
         )
         self.writer.add_audio(
-            f"Audio_{name}_Enhanced", enhanced, epoch, sr=self.cfg.sample_rate
+            f"Audio_{name}_Enhanced", enhanced, epoch, sr=self.sample_rate
         )
-        self.writer.add_audio(
-            f"Audio_{name}_Clean", clean, epoch, sr=self.cfg.sample_rate
-        )
+        self.writer.add_audio(f"Audio_{name}_Clean", clean, epoch, sr=self.sample_rate)
 
     def visualize_waveform(self, noisy_mix, enhanced, clean, epoch, name):
         fig, ax = plt.subplots(3, 1)

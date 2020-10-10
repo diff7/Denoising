@@ -13,7 +13,7 @@ from model.unet_basic import Model as Unet
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 
-from model_wrapper_pl import Plwrap
+from model_wrap_pl import Plwrap
 from utils import OmniLogger
 
 config = OmegaConf.load("config.yaml")
@@ -63,12 +63,17 @@ def main(_config):
 
     trainer = pl.Trainer(
         max_epochs=cfg.trainer.epochs,
-        gpus=0,
-        auto_select_gpus=False,
+        gpus=[1],
+        auto_select_gpus=True,
         checkpoint_callback=checkpoint_callback,
+        val_check_interval=cfg.trainer.validation_interval,
     )
 
-    trainer.fit(model_pl, train_dataloader, val_dataloader)
+    trainer.fit(
+        model_pl,
+        train_dataloader,
+        val_dataloader,
+    )
 
 
 if __name__ == "__main__":
