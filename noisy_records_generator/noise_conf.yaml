@@ -1,11 +1,12 @@
-clean_files_txt : 'clean.txt'
+clean_files_txt : 'clean_files.txt'
 noise_sr: 44100
 source_sr: 16000
 resample: true
-noise_files_txt : 'noisy.txt'
+noise_files_txt : 'noise.txt'
 snr_min: 2
 snr_max: 20
-workers: 3
-num_copies: 10
+workers: 5
+num_copies: 5
 result_dir: '../../noisy_files'
 save_records: 'noisy_records.txt'
+white_noise: 0.6   # random > 0.7

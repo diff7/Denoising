@@ -17,11 +17,12 @@ from model_wrap_pl import Plwrap
 from utils import OmniLogger
 
 config = OmegaConf.load("config.yaml")
-ex = Experiment(config.exp_name)
+ex = Experiment(config.trainer.exp_name)
 ex.add_config(dict(config))
 ex.observers.append(
     MongoObserver.create(
-        url="mongodb://mongo_user:pass@dockersacredomni_mongo_1/", db_name="sacred"
+        url="mongodb://mongo_user:pass@egorsv_dockersacredomni_mongo_1/",
+        db_name="sacred",
     )
 )
 
@@ -53,20 +54,31 @@ def main(_config):
     model = Unet(**config.model)
     model_pl = Plwrap(cfg, model, writer, loss_function)
 
+    check_point_path = os.path.join(
+        cfg.trainer.base_dir, cfg.trainer.exp_name, "checkpoints"
+    )
+    os.makedirs(check_point_path, exist_ok=True)
     checkpoint_callback = ModelCheckpoint(
-        filepath=os.path.join("./check_points"),
+        filepath=check_point_path,
         verbose=True,
         monitor="score",
         mode="max",
-        save_weights_only=True,
+        save_weights_only=False,
     )
 
+    # adhoc load if only save weights
+
+    # model_pl.load_state_dict(
+    #     torch.load(os.path.join(check_point_path, "epoch=59.ckpt"))["state_dict"]
+    # )
+
     trainer = pl.Trainer(
+        # resume_from_checkpoint=os.path.join(check_point_path, "epoch=59.ckpt"),
         max_epochs=cfg.trainer.epochs,
-        gpus=[1],
+        gpus=1,
         auto_select_gpus=True,
         checkpoint_callback=checkpoint_callback,
-        val_check_interval=cfg.trainer.validation_interval,
+        check_val_every_n_epoch=cfg.trainer.validation_interval,
     )
 
     trainer.fit(

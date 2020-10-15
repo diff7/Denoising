@@ -36,8 +36,8 @@ class DatasetAudio(data.Dataset):
 
         Notes:
             dataset list file：
-            <noisy_1_path><space><clean_1_path>
-            <noisy_2_path><space><clean_2_path>
+            <clean_1_path><space><noisy_1_path>
+            <clean_2_path><space><noisy_2_path>
             ...
             <noisy_n_path><space><clean_n_path>
 

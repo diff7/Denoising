@@ -21,6 +21,7 @@ class Plwrap(pl.LightningModule):
         self.sample_len = cfg.sample_len
         self.sample_rate = cfg.trainer.sample_rate
         self.writer = writer
+        self.loss = 0
 
     def configure_optimizers(self):
         return optim.Adam(
@@ -36,7 +37,13 @@ class Plwrap(pl.LightningModule):
 
         enhanced = self.forward(noisy_mix)
         loss = self.loss_fn(clean, enhanced)
-        self.writer.add_scalars(f"Train/Loss", loss.item(), batch_nb)
+
+        if batch_nb%500==0:
+            self.writer.add_scalars(f"Train/Loss", loss/500, batch_nb)
+            self.loss = 0 
+
+        else:
+             self.loss+=loss.item()
         return {"loss": loss}
 
     def validation_step(self, batch, batch_nb):
