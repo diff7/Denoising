@@ -18,8 +18,8 @@ data:
 model:
   n_layers: 12
   channels_interval:  24
-  stft_sc_factor: .5
-  stft_mag_factor: .5
+  stft_sc_factor: 0.5
+  stft_mag_factor: 0.5
 
 optim:
   lr: 0.0001
