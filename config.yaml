@@ -26,8 +26,6 @@ loss:
 optim:
   lr: 0.0001
 
-loss: mse_loss # l1_lossw
-
 trainer:
   sample_rate: 16000  #16000
   resume: None # continue training resume_from
