@@ -4,11 +4,13 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 from sacred import Experiment
 from sacred.observers.mongo import QueuedMongoObserver
-#from sacred.observers import MongoObserver
+
+# from sacred.observers import MongoObserver
 from torch.utils.data import DataLoader
 
 from dataset.waveform_dataset import DatasetAudio
-from model.loss import l1_loss, mse_loss
+from model.loss import l1_loss
+from model.sftt_loss import MultiResolutionSTFTLoss
 from model.unet_basic import Model as Unet
 
 import pytorch_lightning as pl
@@ -37,7 +39,12 @@ def main(_config):
     torch.manual_seed(cfg.seed)  # for both CPU and GPU
     np.random.seed(cfg.seed)
 
-    loss_function = globals()[config.loss]()
+    mrstftloss = MultiResolutionSTFTLoss(
+        factor_sc=cfg.model.stft_sc_factor, factor_mag=cfg.model.stft_mag_factor
+    )
+
+    def loss_function(x, y):
+        return l1_loss(x, y) + mrstftloss(x, y)
 
     train_set = DatasetAudio(
         **dict(config.data.dataset_train), sample_len=cfg.sample_len
@@ -76,7 +83,7 @@ def main(_config):
     if cfg.resume is not None:
         resume_from = os.path.join(check_point_path, cfg.resume)
     trainer = pl.Trainer(
-        resume_from_checkpoint= resume_from,
+        resume_from_checkpoint=resume_from,
         max_epochs=cfg.trainer.epochs,
         gpus=1,
         auto_select_gpus=True,
