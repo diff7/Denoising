@@ -40,7 +40,7 @@ def main(_config):
     np.random.seed(cfg.seed)
 
     mrstftloss = MultiResolutionSTFTLoss(
-        factor_sc=cfg.model.stft_sc_factor, factor_mag=cfg.model.stft_mag_factor
+        factor_sc=cfg.loss.stft_sc_factor, factor_mag=cfg.loss.stft_mag_factor
     )
 
     def loss_function(x, y):
