@@ -36,7 +36,7 @@ class Plwrap(pl.LightningModule):
         noisy_mix, clean, _ = batch
 
         enhanced = self.forward(noisy_mix)
-        loss = self.loss_fn(clean, enhanced)
+        loss = self.loss_fn(clean.float(), enhanced.float())
 
         if batch_nb % 500 == 0:
             self.writer.add_scalars(f"Train/Loss", loss / 500, batch_nb)
