@@ -37,5 +37,5 @@ trainer:
   sample_length: 16384
   base_dir: '../results/'
   spectro_dir: 'speech'
-  exp_name: 'unet_pl_ru_ukr_no_white_noise'
+  exp_name: 'unet_pl_ru_ukr_fft_loss'
   cudnn_deterministic: True
