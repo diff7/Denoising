@@ -18,6 +18,8 @@ data:
 model:
   n_layers: 12
   channels_interval:  24
+
+loss:
   stft_sc_factor: 0.5
   stft_mag_factor: 0.5
 
@@ -37,5 +39,5 @@ trainer:
   sample_length: 16384
   base_dir: '../results/'
   spectro_dir: 'speech'
-  exp_name: 'unet_pl_ru_ukr_no_white_noise'
+  exp_name: 'unet_pl_ru_ukr_FFTLOSS'
   cudnn_deterministic: True
