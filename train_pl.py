@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import torch
+import torch.nn.functional as F
+
 from omegaconf import DictConfig, OmegaConf
 from sacred import Experiment
 from sacred.observers.mongo import QueuedMongoObserver
@@ -42,10 +44,8 @@ def main(_config):
         factor_sc=cfg.loss.stft_sc_factor, factor_mag=cfg.loss.stft_mag_factor
     )
 
-    l1_loss = torch.nn.L1Loss()
-
     def loss_function(x, y):
-        return l1_loss(x, y) + mrstftloss(x, y)
+        return F.l1_loss(x, y) + mrstftloss(x.squeeze(1), y.squeeze(1))
 
     train_set = DatasetAudio(
         **dict(config.data.dataset_train), sample_len=cfg.sample_len
