@@ -9,7 +9,6 @@ from sacred.observers.mongo import QueuedMongoObserver
 from torch.utils.data import DataLoader
 
 from dataset.waveform_dataset import DatasetAudio
-from model.loss import l1_loss
 from model.sftt_loss import MultiResolutionSTFTLoss
 from model.unet_basic import Model as Unet
 
@@ -42,6 +41,8 @@ def main(_config):
     mrstftloss = MultiResolutionSTFTLoss(
         factor_sc=cfg.loss.stft_sc_factor, factor_mag=cfg.loss.stft_mag_factor
     )
+
+    l1_loss = torch.nn.L1Loss()
 
     def loss_function(x, y):
         return l1_loss(x, y) + mrstftloss(x, y)
