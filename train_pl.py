@@ -3,7 +3,8 @@ import numpy as np
 import torch
 from omegaconf import DictConfig, OmegaConf
 from sacred import Experiment
-from sacred.observers import MongoObserver
+from sacred.observers.mongo import QueuedMongoObserver
+#from sacred.observers import MongoObserver
 from torch.utils.data import DataLoader
 
 from dataset.waveform_dataset import DatasetAudio
@@ -20,7 +21,7 @@ config = OmegaConf.load("config.yaml")
 ex = Experiment(config.trainer.exp_name)
 ex.add_config(dict(config))
 ex.observers.append(
-    MongoObserver.create(
+    QueuedMongoObserver.create(
         url="mongodb://mongo_user:pass@egorsv_dockersacredomni_mongo_1/",
         db_name="sacred",
     )
@@ -69,11 +70,13 @@ def main(_config):
     # adhoc load if only save weights
 
     # model_pl.load_state_dict(
-    #     torch.load(os.path.join(check_point_path, "epoch=59.ckpt"))["state_dict"]
+    #     torch.load(os.path.join(check_point_path, c))["state_dict"]
     # )
-
+    resume_from = None
+    if cfg.resume is not None:
+        resume_from = os.path.join(check_point_path, cfg.resume)
     trainer = pl.Trainer(
-        # resume_from_checkpoint=os.path.join(check_point_path, "epoch=59.ckpt"),
+        resume_from_checkpoint= resume_from,
         max_epochs=cfg.trainer.epochs,
         gpus=1,
         auto_select_gpus=True,

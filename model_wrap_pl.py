@@ -38,12 +38,12 @@ class Plwrap(pl.LightningModule):
         enhanced = self.forward(noisy_mix)
         loss = self.loss_fn(clean, enhanced)
 
-        if batch_nb%500==0:
-            self.writer.add_scalars(f"Train/Loss", loss/500, batch_nb)
-            self.loss = 0 
+        if batch_nb % 500 == 0:
+            self.writer.add_scalars(f"Train/Loss", loss / 500, batch_nb)
+            self.loss = 0
 
         else:
-             self.loss+=loss.item()
+            self.loss += loss.item()
         return {"loss": loss}
 
     def validation_step(self, batch, batch_nb):
