@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 from utils import compute_STOI, compute_PESQ
 
+from augment import Augment
 
 class Plwrap(pl.LightningModule):
     def __init__(self, cfg, model, writer, loss_fn):
@@ -22,6 +23,7 @@ class Plwrap(pl.LightningModule):
         self.sample_rate = cfg.trainer.sample_rate
         self.writer = writer
         self.loss = 0
+        self.augment = Augment(shift = cfg.data.shift)
 
     def configure_optimizers(self):
         return optim.Adam(
@@ -34,7 +36,11 @@ class Plwrap(pl.LightningModule):
 
     def training_step(self, batch, batch_nb):
         noisy_mix, clean, _ = batch
-
+        
+        sources = torch.stack([noisy_mix - clean, clean])
+        sources = self.augment(sources)
+        noise, clean = sources
+        noisy_mix = noise + clean 
         enhanced = self.forward(noisy_mix)
         loss = self.loss_fn(clean.float(), enhanced.float())
 

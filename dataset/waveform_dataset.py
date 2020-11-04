@@ -25,7 +25,7 @@ def sample_fixed_length_data_aligned(data_a, data_b, sample_len):
 
 
 class DatasetAudio(data.Dataset):
-    def __init__(self, file_path, sample_len=16384, mode="train"):
+    def __init__(self, file_path, sample_len=16384, mode="train", shift=0):
         """Construct dataset for training and validation.
         Args:
             dataset (str): *.txt, the path of the dataset list file. See "Notes."
@@ -66,7 +66,7 @@ class DatasetAudio(data.Dataset):
 
         self.length = len(dataset_list)
         self.dataset_list = dataset_list
-        self.sample_len = sample_len
+        self.sample_len = sample_len+shift
         self.mode = mode
 
     def __len__(self):
