@@ -1,5 +1,5 @@
 import torch
-from main.model.demucs import Demucs
+from model.demucs import Demucs
 from omegaconf import OmegaConf
 from collections import OrderedDict
 
@@ -9,7 +9,7 @@ new_torch_model_path = 'results/Demucs_pl_ru_ukr/checkpoints/torch_214.ckpt'
 config_path = './main/config.yaml'
 
 if __name__ == "__main__":
-    checkpoint = torch.load(model_path)
+    checkpoint = torch.load(pl_model_path)
     config = OmegaConf.load(config_path)
     model = Demucs(**config.demucs)
 
