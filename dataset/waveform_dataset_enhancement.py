@@ -27,7 +27,7 @@ class WaveformDataset(Dataset):
             (mixture signals, filename)
         """
         super(WaveformDataset, self).__init__()
-        dataset_list = [line.rstrip('\n') for line in open(os.path.abspath(os.path.expanduser(dataset)), "r")]
+        dataset_list = [line.rstrip('\n').rstrip(' ') for line in open(os.path.abspath(os.path.expanduser(dataset)), "r")]
 
         dataset_list = dataset_list[offset:]
         if limit:

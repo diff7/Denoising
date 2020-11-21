@@ -12,8 +12,7 @@ from torch.utils.data import DataLoader
 
 from dataset.waveform_dataset import DatasetAudio
 from model.sftt_loss import MultiResolutionSTFTLoss
-from model.unet_basic import Model as Unet
-
+from model.demucs import Demucs
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -41,7 +40,8 @@ def main(_config):
     np.random.seed(cfg.seed)
 
     mrstftloss = MultiResolutionSTFTLoss(
-        factor_sc=cfg.loss.stft_sc_factor, factor_mag=cfg.loss.stft_mag_factor
+        factor_sc=cfg.loss.stft_sc_factor,
+        factor_mag=cfg.loss.stft_mag_factor,
     )
 
     def loss_function(x, y):
@@ -49,25 +49,32 @@ def main(_config):
         return F.l1_loss(x, y) + sc_loss + mag_loss
 
     train_set = DatasetAudio(
-        **dict(config.data.dataset_train), sample_len=cfg.sample_len, shift=cfg.data.shift)
-    
+        **dict(config.data.dataset_train),
+        sample_len=cfg.sample_len,
+        shift=cfg.data.shift,
+    )
+
     train_dataloader = DataLoader(
         dataset=train_set,
         **config.data.loader_train,
     )
 
-    val_set = DatasetAudio(**config.data.dataset_val, sample_len=cfg.sample_len)
+    val_set = DatasetAudio(
+        **config.data.dataset_val, sample_len=cfg.sample_len
+    )
     val_dataloader = DataLoader(
         dataset=val_set, num_workers=1, batch_size=1, shuffle=True
     )
 
-    model = Unet(**config.model)
+    model = Demucs(**config.demucs)
     model_pl = Plwrap(cfg, model, writer, loss_function)
 
+    
     check_point_path = os.path.join(
         cfg.trainer.base_dir, cfg.trainer.exp_name, "checkpoints"
     )
     os.makedirs(check_point_path, exist_ok=True)
+
     checkpoint_callback = ModelCheckpoint(
         filepath=check_point_path,
         verbose=True,
@@ -82,8 +89,10 @@ def main(_config):
     #     torch.load(os.path.join(check_point_path, c))["state_dict"]
     # )
     resume_from = None
-    if cfg.resume is not None:
-        resume_from = os.path.join(check_point_path, cfg.resume)
+    if cfg.trainer.resume is not None:
+        resume_from = os.path.join(
+            check_point_path, cfg.trainer.resume
+        )
     print(resume_from)
     trainer = pl.Trainer(
         resume_from_checkpoint=resume_from,

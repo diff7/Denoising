@@ -12,6 +12,7 @@ from utils import compute_STOI, compute_PESQ
 
 from augment import Augment
 
+
 class Plwrap(pl.LightningModule):
     def __init__(self, cfg, model, writer, loss_fn):
         super().__init__()
@@ -23,11 +24,14 @@ class Plwrap(pl.LightningModule):
         self.sample_rate = cfg.trainer.sample_rate
         self.writer = writer
         self.loss = 0
-        self.augment = Augment(shift = cfg.data.shift)
+        self.augment = Augment(shift=cfg.data.shift)
+        self.loss_step = 0
 
     def configure_optimizers(self):
         return optim.Adam(
-            self.model.parameters(), lr=self.cfg.optim.lr, weight_decay=1e-06
+            self.model.parameters(),
+            lr=self.cfg.optim.lr,
+            weight_decay=1e-06,
         )
 
     def forward(self, inp):
@@ -36,17 +40,20 @@ class Plwrap(pl.LightningModule):
 
     def training_step(self, batch, batch_nb):
         noisy_mix, clean, _ = batch
-        
+
         sources = torch.stack([noisy_mix - clean, clean])
         sources = self.augment(sources)
         noise, clean = sources
-        noisy_mix = noise + clean 
+        noisy_mix = noise + clean
         enhanced = self.forward(noisy_mix)
         loss = self.loss_fn(clean.float(), enhanced.float())
 
         if batch_nb % 500 == 0:
-            self.writer.add_scalars(f"Train/Loss", loss / 500, batch_nb)
+            self.writer.add_scalars(
+                f"Train/Loss", loss / 500, self.loss_step
+            )
             self.loss = 0
+            self.loss_step += 1
 
         else:
             self.loss += loss.item()
@@ -60,7 +67,9 @@ class Plwrap(pl.LightningModule):
             device = "cpu"
 
         noisy_mix, clean, name = batch
-        assert len(name) == 1, "Only support batch size is 1 in val/enhancement stage."
+        assert (
+            len(name) == 1
+        ), "Only support batch size is 1 in val/enhancement stage."
         assert len(noisy_mix) == len(
             clean
         ), "Lenght of noisy and clean files does not match"
@@ -70,17 +79,31 @@ class Plwrap(pl.LightningModule):
 
         # The input of the model should be fixed length.
         if noisy_mix.size(-1) % self.sample_len != 0:
-            padded_length = self.sample_len - (noisy_mix.size(-1) % self.sample_len)
+            padded_length = self.sample_len - (
+                noisy_mix.size(-1) % self.sample_len
+            )
             noisy_mix = torch.cat(
-                [noisy_mix, torch.zeros(size=(1, 1, padded_length), device=device)],
+                [
+                    noisy_mix,
+                    torch.zeros(
+                        size=(1, 1, padded_length), device=device
+                    ),
+                ],
                 dim=-1,
             )
 
-        assert noisy_mix.size(-1) % self.cfg.sample_len == 0 and noisy_mix.dim() == 3
-        noisy_chunks = list(torch.split(noisy_mix, self.cfg.sample_len, dim=-1))
+        assert (
+            noisy_mix.size(-1) % self.cfg.sample_len == 0
+            and noisy_mix.dim() == 3
+        )
+        noisy_chunks = list(
+            torch.split(noisy_mix, self.cfg.sample_len, dim=-1)
+        )
 
         # Get enhanced full audio
-        enhanced_chunks = [self.model(chunk).detach().cpu() for chunk in noisy_chunks]
+        enhanced_chunks = [
+            self.model(chunk).detach().cpu() for chunk in noisy_chunks
+        ]
         enhanced = torch.cat(enhanced_chunks, dim=-1)
 
         if padded_length != 0:
@@ -126,17 +149,25 @@ class Plwrap(pl.LightningModule):
         epoch = self.current_epoch
 
         self.writer.add_scalars(
-            f"STOI Clean and noisy", get_metrics_ave("stoi_c_n"), epoch
+            f"STOI Clean and noisy",
+            get_metrics_ave("stoi_c_n"),
+            epoch,
         )
         self.writer.add_scalars(
-            f"STOI Clean and enhanced", get_metrics_ave("stoi_c_e"), epoch
+            f"STOI Clean and enhanced",
+            get_metrics_ave("stoi_c_e"),
+            epoch,
         )
 
         self.writer.add_scalars(
-            f"PESQ Clean and noisy", get_metrics_ave("pesq_c_n"), epoch
+            f"PESQ Clean and noisy",
+            get_metrics_ave("pesq_c_n"),
+            epoch,
         )
         self.writer.add_scalars(
-            f"PESQ Clean and enhanced", get_metrics_ave("pesq_c_e"), epoch
+            f"PESQ Clean and enhanced",
+            get_metrics_ave("pesq_c_e"),
+            epoch,
         )
 
         score = (
@@ -148,16 +179,28 @@ class Plwrap(pl.LightningModule):
         # LOGGING FUNCS:
         # NOTE: move funcs to writer later
 
-    def write_audio_samples(self, noisy_mix, enhanced, clean, epoch, name):
+    def write_audio_samples(
+        self, noisy_mix, enhanced, clean, epoch, name
+    ):
         self.writer.add_audio(
-            f"Audio_{name}_Noisy", noisy_mix, epoch, sr=self.sample_rate
+            f"Audio_{name}_Noisy",
+            noisy_mix,
+            epoch,
+            sr=self.sample_rate,
         )
         self.writer.add_audio(
-            f"Audio_{name}_Enhanced", enhanced, epoch, sr=self.sample_rate
+            f"Audio_{name}_Enhanced",
+            enhanced,
+            epoch,
+            sr=self.sample_rate,
         )
-        self.writer.add_audio(f"Audio_{name}_Clean", clean, epoch, sr=self.sample_rate)
+        self.writer.add_audio(
+            f"Audio_{name}_Clean", clean, epoch, sr=self.sample_rate
+        )
 
-    def visualize_waveform(self, noisy_mix, enhanced, clean, epoch, name):
+    def visualize_waveform(
+        self, noisy_mix, enhanced, clean, epoch, name
+    ):
         fig, ax = plt.subplots(3, 1)
         for j, y in enumerate([noisy_mix, enhanced, clean]):
             ax[j].set_title(
@@ -169,15 +212,23 @@ class Plwrap(pl.LightningModule):
         plt.tight_layout()
         self.writer.add_figure(f"Waveform_{name}", fig, epoch)
 
-    def visualize_spectrogram(self, noisy_mix, enhanced, clean, epoch, name):
+    def visualize_spectrogram(
+        self, noisy_mix, enhanced, clean, epoch, name
+    ):
         noisy_mag, _ = librosa.magphase(
-            librosa.stft(noisy_mix, n_fft=320, hop_length=160, win_length=320)
+            librosa.stft(
+                noisy_mix, n_fft=320, hop_length=160, win_length=320
+            )
         )
         enhanced_mag, _ = librosa.magphase(
-            librosa.stft(enhanced, n_fft=320, hop_length=160, win_length=320)
+            librosa.stft(
+                enhanced, n_fft=320, hop_length=160, win_length=320
+            )
         )
         clean_mag, _ = librosa.magphase(
-            librosa.stft(clean, n_fft=320, hop_length=160, win_length=320)
+            librosa.stft(
+                clean, n_fft=320, hop_length=160, win_length=320
+            )
         )
 
         fig, axes = plt.subplots(3, 1, figsize=(6, 6))

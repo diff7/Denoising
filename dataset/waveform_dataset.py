@@ -51,7 +51,7 @@ class DatasetAudio(data.Dataset):
         """
         super(Dataset, self).__init__()
         dataset_list = [
-            line.rstrip("\n")
+            line.rstrip("\n").rstrip() 
             for line in open(os.path.abspath(os.path.expanduser(file_path)), "r")
         ]
 
