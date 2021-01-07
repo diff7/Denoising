@@ -16,7 +16,7 @@ from omegaconf import OmegaConf
 
 
 def read_A_file(file):
-    waveform, sr = ta.load(file, normalization=True)
+    waveform, sr = librosa.load(file, 16000)
     return waveform
 
 
@@ -32,21 +32,20 @@ def align(waveform, new_length):
     return new_waveform
 
 
-def read_n_align(file, new_length, resample):
+def read_n_align(file, new_length):
     waveform = read_A_file(file)
     #waveform = resample(waveform)
-    waveform = librosa.resample(waveform.numpy()[0], 44100, 16000)
-    waveform = torch.tensor(waveform).unsqueeze(0)
+    #waveform = librosa.resample(waveform.numpy()[0], 44100, 16000)
+    waveform = torch.tensor(waveform).unsqueeze(0).unsqueeze(0)
     return align(waveform, new_length)
 
 
 def read_random_batch(all_files, resample, batch_size, workers, new_length):
-
     files_batch = random.sample(all_files, batch_size)
     new_length = [new_length] * batch_size
     resample = [resample] * batch_size
     with get_context("spawn").Pool(workers) as p:
-        files = p.starmap(read_n_align, zip(files_batch, new_length, resample))
+        files = p.starmap(read_n_align, zip(files_batch, new_length))
     return torch.cat(files, 0)
 
 

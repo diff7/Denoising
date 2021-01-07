@@ -9,4 +9,4 @@ workers: 5
 num_copies: 5
 result_dir: '../../noisy_files'
 save_records: 'noisy_records.txt'
-white_noise: 0.6   # random > 0.7
+white_noise: 0.6   # random > 0.6

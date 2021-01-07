@@ -1,12 +1,14 @@
+# save pytorch ligthing as torch model
+
 import torch
 from model.demucs import Demucs
 from omegaconf import OmegaConf
 from collections import OrderedDict
 
 
-pl_model_path = 'results/Demucs_pl_ru_ukr/checkpoints/epoch=214.ckpt'
-new_torch_model_path = 'results/Demucs_pl_ru_ukr/checkpoints/torch_214.ckpt'
-config_path = './main/config.yaml'
+pl_model_path = 'model_lighting.ckpt'
+new_torch_model_path = 'torch_model.ckpt'
+config_path = 'config.yaml'
 
 if __name__ == "__main__":
     checkpoint = torch.load(pl_model_path)
