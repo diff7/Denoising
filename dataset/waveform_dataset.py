@@ -111,8 +111,8 @@ class DatasetAudio(data.Dataset):
             mixture, clean = sample_fixed_length_data_aligned(
                 mixture, clean, self.sample_len
             )
-            if self.use_random_cut:
-                mixture = random_cut(mixture)
+        if self.use_random_cut:
+            mixture = random_cut(mixture)
 
             return mixture.reshape(1, -1), clean.reshape(1, -1), filename
         else:
