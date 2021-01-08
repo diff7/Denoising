@@ -38,7 +38,14 @@ class Plwrap(pl.LightningModule):
         return out
 
     def training_step(self, batch, batch_nb):
+        if self.trainer.root_gpu is not None:
+            device = self.trainer.root_gpu
+        else:
+            device = "cpu"
+
         noisy_mix, clean, _ = batch
+
+        noisy_mix, clean = noisy_mix.to(device), clean.to(device)
 
         sources = torch.stack([noisy_mix - clean, clean])
         sources = self.augment(sources)
