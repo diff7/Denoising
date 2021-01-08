@@ -5,3 +5,5 @@
 *.wav
 /dataset/
 /dataset_mixed/
+/__pycahce__/
+/lightning_logs/

@@ -10,7 +10,9 @@ from torch.utils.data import Dataset
 
 def sample_fixed_length_data_aligned(data_a, data_b, sample_len):
     """sample with fixed length from two dataset"""
-    assert len(data_a) == len(data_b), "Inconsistent dataset length, unable to sampling"
+    assert len(data_a) == len(
+        data_b
+    ), "Inconsistent dataset length, unable to sampling"
     assert (
         len(data_a) >= sample_len
     ), f"len(data_a) is {len(data_a)}, sample_len is {sample_len}."
@@ -24,8 +26,24 @@ def sample_fixed_length_data_aligned(data_a, data_b, sample_len):
     return data_a[start:end], data_b[start:end]
 
 
+def random_cut(signal, cut_len=0.05):
+    num_cuts = np.random.randint(0, 5)
+    cut_len = int(signal.shape[-1] * cut_len)
+    for _ in range(num_cuts):
+        start = np.random.randint(0, signal.shape[-1])
+        signal[start : start + cut_len] = 0
+    return signal
+
+
 class DatasetAudio(data.Dataset):
-    def __init__(self, file_path, sample_len=16384, mode="train"):
+    def __init__(
+        self,
+        file_path,
+        sample_len=16384,
+        mode="train",
+        shift=0,
+        use_random_cut=True,
+    ):
         """Construct dataset for training and validation.
         Args:
             dataset (str): *.txt, the path of the dataset list file. See "Notes."
@@ -36,8 +54,8 @@ class DatasetAudio(data.Dataset):
 
         Notes:
             dataset list file：
-            <noisy_1_path><space><clean_1_path>
-            <noisy_2_path><space><clean_2_path>
+            <clean_1_path><space><noisy_1_path>
+            <clean_2_path><space><noisy_2_path>
             ...
             <noisy_n_path><space><clean_n_path>
 
@@ -51,8 +69,10 @@ class DatasetAudio(data.Dataset):
         """
         super(Dataset, self).__init__()
         dataset_list = [
-            line.rstrip("\n")
-            for line in open(os.path.abspath(os.path.expanduser(file_path)), "r")
+            line.rstrip("\n").rstrip()
+            for line in open(
+                os.path.abspath(os.path.expanduser(file_path)), "r"
+            )
         ]
 
         # dataset_list = dataset_list[offset:]
@@ -66,8 +86,9 @@ class DatasetAudio(data.Dataset):
 
         self.length = len(dataset_list)
         self.dataset_list = dataset_list
-        self.sample_len = sample_len
+        self.sample_len = sample_len + shift
         self.mode = mode
+        self.use_random_cut = use_random_cut
 
     def __len__(self):
         return self.length
@@ -78,6 +99,7 @@ class DatasetAudio(data.Dataset):
         mixture, _ = librosa.load(
             os.path.abspath(os.path.expanduser(mixture_path)), sr=None
         )
+
         clean, _ = librosa.load(
             os.path.abspath(os.path.expanduser(clean_path)), sr=None
         )
@@ -89,6 +111,9 @@ class DatasetAudio(data.Dataset):
             mixture, clean = sample_fixed_length_data_aligned(
                 mixture, clean, self.sample_len
             )
+            if self.use_random_cut:
+                mixture = random_cut(mixture)
+
             return mixture.reshape(1, -1), clean.reshape(1, -1), filename
         else:
             # TODO Rewrite val with collate to match longest file in the batch.

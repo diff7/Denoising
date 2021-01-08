@@ -1,39 +1,57 @@
-tag: unet_pl_batch_8
+tag: 'sound'
 seed: 77
 sample_len: 16384
 data:
+  shift: 2000
   dataset_train:
-    file_path:  '/home/dev/other/denois/train.txt'
+    file_path:  '/home/dev/other/denois/train_eng_slav.txt'
     mode: 'train'
 
   dataset_val:
-    file_path: '/home/dev/other/denois/val.txt'
+    file_path: '/home/dev/other/denois/test_eng_slav.txt'
     mode: 'validation'
 
   loader_train:
     shuffle: True
-    num_workers: 2
-    batch_size: 8
+    num_workers: 3
+    batch_size: 32
 
-model:
+unet:
   n_layers: 12
   channels_interval:  24
 
-optim:
-  lr: 0.0001
+demucs:
+  chin: 1
+  chout: 1
+  hidden: 48
+  max_hidden: 10000
+  causal: true
+  glu: true
+  depth: 5
+  kernel_size: 8
+  stride: 4
+  normalize: true
+  resample: 4
+  growth: 2
+  rescale: 0.1
 
-loss: mse_loss # l1_lossw
+loss:
+  stft_sc_factor: 0.5
+  stft_mag_factor: 0.5
+
+optim:
+  lr: 0.00001
 
 trainer:
   sample_rate: 16000  #16000
-  resume: False # continue training
+  resume: 'epoch=214.ckpt'  # continue training resume_from
   epochs: 1200
   visualize_waveform_limit: 5
   visualize_audio_limit: 5
   visualize_spectrogram_limit: 5
-  validation_interval: 15
+  validation_interval: 5
   sample_length: 16384
   base_dir: '../results/'
   spectro_dir: 'speech'
-  exp_name: unet_pl_test
+  exp_name: 'demucs_eng_and_slav'
   cudnn_deterministic: True

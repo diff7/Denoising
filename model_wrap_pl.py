@@ -5,10 +5,11 @@ import librosa.display
 
 import pytorch_lightning as pl
 import torch.optim as optim
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
 from utils import compute_STOI, compute_PESQ
+
+from augment import Augment
 
 
 class Plwrap(pl.LightningModule):
@@ -21,10 +22,15 @@ class Plwrap(pl.LightningModule):
         self.sample_len = cfg.sample_len
         self.sample_rate = cfg.trainer.sample_rate
         self.writer = writer
+        self.loss = 0
+        self.augment = Augment(shift=cfg.data.shift)
+        self.loss_step = 0
 
     def configure_optimizers(self):
         return optim.Adam(
-            self.model.parameters(), lr=self.cfg.optim.lr, weight_decay=1e-06
+            self.model.parameters(),
+            lr=self.cfg.optim.lr,
+            weight_decay=1e-06,
         )
 
     def forward(self, inp):
@@ -34,9 +40,20 @@ class Plwrap(pl.LightningModule):
     def training_step(self, batch, batch_nb):
         noisy_mix, clean, _ = batch
 
+        sources = torch.stack([noisy_mix - clean, clean])
+        sources = self.augment(sources)
+        noise, clean = sources
+        noisy_mix = noise + clean
         enhanced = self.forward(noisy_mix)
-        loss = self.loss_fn(clean, enhanced)
-        self.writer.add_scalars(f"Train/Loss", loss.item(), batch_nb)
+        loss = self.loss_fn(clean.float(), enhanced.float())
+
+        if batch_nb % 500 == 0:
+            self.writer.add_scalars(f"Train/Loss", loss / 500, self.loss_step)
+            self.loss = 0
+            self.loss_step += 1
+
+        else:
+            self.loss += loss.item()
         return {"loss": loss}
 
     def validation_step(self, batch, batch_nb):
@@ -47,7 +64,9 @@ class Plwrap(pl.LightningModule):
             device = "cpu"
 
         noisy_mix, clean, name = batch
-        assert len(name) == 1, "Only support batch size is 1 in val/enhancement stage."
+        assert (
+            len(name) == 1
+        ), "Only support batch size is 1 in val/enhancement stage."
         assert len(noisy_mix) == len(
             clean
         ), "Lenght of noisy and clean files does not match"
@@ -57,18 +76,28 @@ class Plwrap(pl.LightningModule):
 
         # The input of the model should be fixed length.
         if noisy_mix.size(-1) % self.sample_len != 0:
-            padded_length = self.sample_len - (noisy_mix.size(-1) % self.sample_len)
+            padded_length = self.sample_len - (
+                noisy_mix.size(-1) % self.sample_len
+            )
             noisy_mix = torch.cat(
-                [noisy_mix, torch.zeros(size=(1, 1, padded_length), device=device)],
+                [
+                    noisy_mix,
+                    torch.zeros(size=(1, 1, padded_length), device=device),
+                ],
                 dim=-1,
             )
 
-        assert noisy_mix.size(-1) % self.cfg.sample_len == 0 and noisy_mix.dim() == 3
+        assert (
+            noisy_mix.size(-1) % self.cfg.sample_len == 0
+            and noisy_mix.dim() == 3
+        )
         noisy_chunks = list(torch.split(noisy_mix, self.cfg.sample_len, dim=-1))
 
         # Get enhanced full audio
-        enhanced_chunks = [self.model(chunk).detach().cpu() for chunk in noisy_chunks]
-        enhanced = torch.cat(enhanced_chunks, dim=-1)
+
+        noisy_chunks = torch.cat(noisy_chunks, dim=0)
+        enhanced_chunks = self.model(noisy_chunks).detach().cpu()
+        enhanced = enhanced_chunks.reshape(-1)
 
         if padded_length != 0:
             enhanced = enhanced[:, :, :-padded_length]
@@ -113,17 +142,25 @@ class Plwrap(pl.LightningModule):
         epoch = self.current_epoch
 
         self.writer.add_scalars(
-            f"STOI Clean and noisy", get_metrics_ave("stoi_c_n"), epoch
+            f"STOI Clean and noisy",
+            get_metrics_ave("stoi_c_n"),
+            epoch,
         )
         self.writer.add_scalars(
-            f"STOI Clean and enhanced", get_metrics_ave("stoi_c_e"), epoch
+            f"STOI Clean and enhanced",
+            get_metrics_ave("stoi_c_e"),
+            epoch,
         )
 
         self.writer.add_scalars(
-            f"PESQ Clean and noisy", get_metrics_ave("pesq_c_n"), epoch
+            f"PESQ Clean and noisy",
+            get_metrics_ave("pesq_c_n"),
+            epoch,
         )
         self.writer.add_scalars(
-            f"PESQ Clean and enhanced", get_metrics_ave("pesq_c_e"), epoch
+            f"PESQ Clean and enhanced",
+            get_metrics_ave("pesq_c_e"),
+            epoch,
         )
 
         score = (
@@ -137,12 +174,20 @@ class Plwrap(pl.LightningModule):
 
     def write_audio_samples(self, noisy_mix, enhanced, clean, epoch, name):
         self.writer.add_audio(
-            f"Audio_{name}_Noisy", noisy_mix, epoch, sr=self.sample_rate
+            f"Audio_{name}_Noisy",
+            noisy_mix,
+            epoch,
+            sr=self.sample_rate,
         )
         self.writer.add_audio(
-            f"Audio_{name}_Enhanced", enhanced, epoch, sr=self.sample_rate
+            f"Audio_{name}_Enhanced",
+            enhanced,
+            epoch,
+            sr=self.sample_rate,
         )
-        self.writer.add_audio(f"Audio_{name}_Clean", clean, epoch, sr=self.sample_rate)
+        self.writer.add_audio(
+            f"Audio_{name}_Clean", clean, epoch, sr=self.sample_rate
+        )
 
     def visualize_waveform(self, noisy_mix, enhanced, clean, epoch, name):
         fig, ax = plt.subplots(3, 1)

@@ -1,6 +1,7 @@
 import os
 import torch
 import random
+import librosa
 from multiprocess import get_context
 from multiprocessing.pool import ThreadPool
 import torchaudio as ta
@@ -9,15 +10,18 @@ from tqdm import tqdm
 from omegaconf import OmegaConf
 
 
+# Did not manage to speed up with gpu !!! Use librosa + numpy next time
 # Preprocessing  on GPU is faster
 # But need to fix GPU out memory
 
+
 def read_A_file(file):
-    waveform, sr = ta.load(file, normalization=True)
-    return waveform.cuda()
+    waveform, sr = librosa.load(file, 16000)
+    return waveform
 
 
 def align(waveform, new_length):
+    waveform = waveform
     if len(waveform[0]) >= new_length:
         new_waveform = waveform[:, :new_length]
     if len(waveform[0]) < new_length:
@@ -28,19 +32,20 @@ def align(waveform, new_length):
     return new_waveform
 
 
-def read_n_align(file, new_length, resample):
+def read_n_align(file, new_length):
     waveform = read_A_file(file)
-    waveform = resample(waveform)
+    #waveform = resample(waveform)
+    #waveform = librosa.resample(waveform.numpy()[0], 44100, 16000)
+    waveform = torch.tensor(waveform).unsqueeze(0).unsqueeze(0)
     return align(waveform, new_length)
 
 
 def read_random_batch(all_files, resample, batch_size, workers, new_length):
-
     files_batch = random.sample(all_files, batch_size)
     new_length = [new_length] * batch_size
     resample = [resample] * batch_size
     with get_context("spawn").Pool(workers) as p:
-        files = p.starmap(read_n_align, zip(files_batch, new_length, resample))
+        files = p.starmap(read_n_align, zip(files_batch, new_length))
     return torch.cat(files, 0)
 
 
@@ -62,14 +67,15 @@ def get_noise_scale(signal, snr):
 def get_random_noise_snr(signal, snr):
     scale = get_noise_scale(signal, snr)
     size = signal.shape[1]
-    return torch.randn(size=(1, size)).cuda() * scale.view(-1, 1)
+    return torch.randn(size=(1, size)) * scale.view(
+        -1, 1
+    )  # torch.randn(size=(1, size)).cuda() * scale.view(-1, 1)
 
 
 def get_snr_scaled_noise(signal, noise, snr):
     scale = get_noise_scale(signal, snr)
     r_n = rms(noise)
     return noise * torch.true_divide(scale, r_n).view(-1, 1)
-
 
 def make_noisy_file(clean_file_path, cfg, noise_files, resample):
     print(f"CURRENT F: {clean_file_path}")
@@ -92,18 +98,20 @@ def make_noisy_file(clean_file_path, cfg, noise_files, resample):
     )
 
     noised = get_snr_scaled_noise(waveform, noises_batch, snr) + waveform
-    if random.random() > 0.5:
+    del noises_batch
+    if random.random() > cfg.white_noise:
         snr = random.randint(cfg.snr_min, cfg.snr_max)
         noised = noised + get_random_noise_snr(noised, snr)
         file_name = file_name + f"_snr{snr}"
-    noised = noised.cpu()
-    torch.cuda.empty_cache() 
+    # CUDA OUT
+    #noised = noised.cpu()
+    #torch.cuda.empty_cache()
 
     def save_file(file, idx):
-        #r_m = rms(file.unsqueeze(0))
+        # r_m = rms(file.unsqueeze(0))
         new_name = file_name + f"_idx{idx}.wav"
         new_name = os.path.abspath(new_name)
-        #ta.save(new_name, file, sample_rate=cfg.source_sr)
+        # ta.save(new_name, file, sample_rate=cfg.source_sr)
         # torch save requiers normalized values in range [-1:1]
         wavfile.write(new_name, cfg.source_sr, file.numpy())
         output_file.write(f"{clean_file_path} {new_name}\n")
