@@ -5,7 +5,6 @@ import librosa.display
 
 import pytorch_lightning as pl
 import torch.optim as optim
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
 from utils import compute_STOI, compute_PESQ
@@ -49,9 +48,7 @@ class Plwrap(pl.LightningModule):
         loss = self.loss_fn(clean.float(), enhanced.float())
 
         if batch_nb % 500 == 0:
-            self.writer.add_scalars(
-                f"Train/Loss", loss / 500, self.loss_step
-            )
+            self.writer.add_scalars(f"Train/Loss", loss / 500, self.loss_step)
             self.loss = 0
             self.loss_step += 1
 
@@ -85,9 +82,7 @@ class Plwrap(pl.LightningModule):
             noisy_mix = torch.cat(
                 [
                     noisy_mix,
-                    torch.zeros(
-                        size=(1, 1, padded_length), device=device
-                    ),
+                    torch.zeros(size=(1, 1, padded_length), device=device),
                 ],
                 dim=-1,
             )
@@ -96,15 +91,13 @@ class Plwrap(pl.LightningModule):
             noisy_mix.size(-1) % self.cfg.sample_len == 0
             and noisy_mix.dim() == 3
         )
-        noisy_chunks = list(
-            torch.split(noisy_mix, self.cfg.sample_len, dim=-1)
-        )
+        noisy_chunks = list(torch.split(noisy_mix, self.cfg.sample_len, dim=-1))
 
         # Get enhanced full audio
-        enhanced_chunks = [
-            self.model(chunk).detach().cpu() for chunk in noisy_chunks
-        ]
-        enhanced = torch.cat(enhanced_chunks, dim=-1)
+
+        noisy_chunks = torch.cat(noisy_chunks, dim=0)
+        enhanced_chunks = self.model(noisy_chunks).detach().cpu()
+        enhanced = enhanced_chunks.reshape(-1)
 
         if padded_length != 0:
             enhanced = enhanced[:, :, :-padded_length]
@@ -179,9 +172,7 @@ class Plwrap(pl.LightningModule):
         # LOGGING FUNCS:
         # NOTE: move funcs to writer later
 
-    def write_audio_samples(
-        self, noisy_mix, enhanced, clean, epoch, name
-    ):
+    def write_audio_samples(self, noisy_mix, enhanced, clean, epoch, name):
         self.writer.add_audio(
             f"Audio_{name}_Noisy",
             noisy_mix,
@@ -198,9 +189,7 @@ class Plwrap(pl.LightningModule):
             f"Audio_{name}_Clean", clean, epoch, sr=self.sample_rate
         )
 
-    def visualize_waveform(
-        self, noisy_mix, enhanced, clean, epoch, name
-    ):
+    def visualize_waveform(self, noisy_mix, enhanced, clean, epoch, name):
         fig, ax = plt.subplots(3, 1)
         for j, y in enumerate([noisy_mix, enhanced, clean]):
             ax[j].set_title(
@@ -212,23 +201,15 @@ class Plwrap(pl.LightningModule):
         plt.tight_layout()
         self.writer.add_figure(f"Waveform_{name}", fig, epoch)
 
-    def visualize_spectrogram(
-        self, noisy_mix, enhanced, clean, epoch, name
-    ):
+    def visualize_spectrogram(self, noisy_mix, enhanced, clean, epoch, name):
         noisy_mag, _ = librosa.magphase(
-            librosa.stft(
-                noisy_mix, n_fft=320, hop_length=160, win_length=320
-            )
+            librosa.stft(noisy_mix, n_fft=320, hop_length=160, win_length=320)
         )
         enhanced_mag, _ = librosa.magphase(
-            librosa.stft(
-                enhanced, n_fft=320, hop_length=160, win_length=320
-            )
+            librosa.stft(enhanced, n_fft=320, hop_length=160, win_length=320)
         )
         clean_mag, _ = librosa.magphase(
-            librosa.stft(
-                clean, n_fft=320, hop_length=160, win_length=320
-            )
+            librosa.stft(clean, n_fft=320, hop_length=160, win_length=320)
         )
 
         fig, axes = plt.subplots(3, 1, figsize=(6, 6))
