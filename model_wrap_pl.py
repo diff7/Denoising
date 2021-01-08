@@ -101,8 +101,9 @@ class Plwrap(pl.LightningModule):
 
         if padded_length != 0:
             enhanced = enhanced[:-padded_length]
-            noisy_mix = noisy_mix[:-padded_length]
+            noisy_mix = noisy_mix[:, :, :-padded_length]
 
+        enhanced = enhanced.reshape(-1).detach().cpu().numpy()
         clean = clean.cpu().numpy().reshape(-1)
         noisy_mix = noisy_mix.cpu().numpy().reshape(-1)
 
