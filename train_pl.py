@@ -92,7 +92,7 @@ def main(_config):
     trainer = pl.Trainer(
         resume_from_checkpoint=resume_from,
         max_epochs=cfg.trainer.epochs,
-        gpus=[2],
+        gpus=[1],
         auto_select_gpus=True,
         checkpoint_callback=checkpoint_callback,
         check_val_every_n_epoch=cfg.trainer.validation_interval,
