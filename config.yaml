@@ -2,13 +2,13 @@ tag: 'sound'
 seed: 77
 sample_len: 16384
 data:
-  shift: 2000
+  shift: 4000
   dataset_train:
-    file_path:  '/home/dev/other/denois/train_eng_slav.txt'
+    file_path:  '/home/dev/other/denois/txt_datasets/train_big.txt'
     mode: 'train'
 
   dataset_val:
-    file_path: '/home/dev/other/denois/test_eng_slav.txt'
+    file_path: '/home/dev/other/denois/txt_datasets/test_big.txt'    
     mode: 'validation'
 
   loader_train:
@@ -44,7 +44,7 @@ optim:
 
 trainer:
   sample_rate: 16000  #16000
-  resume: 'epoch=214.ckpt'  # continue training resume_from
+  resume:   # continue training resume_from
   epochs: 1200
   visualize_waveform_limit: 5
   visualize_audio_limit: 5
@@ -53,5 +53,5 @@ trainer:
   sample_length: 16384
   base_dir: '../results/'
   spectro_dir: 'speech'
-  exp_name: 'demucs_eng_and_slav'
+  exp_name: 'demucs_w_cuts'
   cudnn_deterministic: True
