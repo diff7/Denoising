@@ -46,7 +46,7 @@ def main(_config):
 
     def loss_function(x, y):
         sc_loss, mag_loss = mrstftloss(x.squeeze(1), y.squeeze(1))
-        return F.l1_lomse_loss(x, y) + sc_loss + mag_loss
+        return F.mse_loss(x, y) + sc_loss + mag_loss
 
     train_set = DatasetAudio(
         **dict(config.data.dataset_train),
