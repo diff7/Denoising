@@ -30,13 +30,13 @@ Clean and noisy files were mixed with random SNR value, additionally white noise
 
 ##### Clean speech files:
 1. Russian Open Speech To Text  <br>
-*substes used:*
+*subsets used:*
 - Public_youtube700_val 7311 file
 - Buriy_audiobooks_2_val 7850 files
 - Asr_calls_2_val 12950 files 
 
 2. M-AILABS Speech Dataset  (audio books, a few speakers)<br>
-*substes used:* 
+*subsets used:* 
 - Ukrainian 31543 files
 - Russian 29440 files
 
