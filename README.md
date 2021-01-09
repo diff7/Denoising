@@ -28,15 +28,15 @@ https://pdfs.semanticscholar.org/ed99/08f71d6521a45093ffc0f9365315c1183604.pdf
 ### Generated dataset:
 Clean and noisy files were mixed with random SNR value, additionally white noise was added randomly with different SNR value. For more details check **noisy_records_generator** folder, it containes files and configs for dataset generation.
 
-##### Clean speech files subsets:
+##### Clean speech files:
 1. Russian Open Speech To Text  <br>
-*substes used*
+*substes used:*
 - Public_youtube700_val 7311 file
 - Buriy_audiobooks_2_val 7850 files
 - Asr_calls_2_val 12950 files 
 
-2. M-AILABS Speech Dataset  (audio books, a few speakers)
-*substes used* <br>
+2. M-AILABS Speech Dataset  (audio books, a few speakers)<br>
+*substes used:* 
 - Ukrainian 31543 files
 - Russian 29440 files
 
@@ -45,7 +45,7 @@ Clean and noisy files were mixed with random SNR value, additionally white noise
 2. TAU Urban Acoustic Scenes 9072 files used
 
 
-##### Final dataset contained about 150.000 files, some clean files were used several times with different types of noise.
+##### Final dataset contained about 150k files, some clean files were used several times with different types of noise.
 
 ## METRICS & RESULTS
 Model was trained 400 epochs. I have not checked quality on VCTK or other public datasets and used a subset of generated dataset with 4k files for validation.
