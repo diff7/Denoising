@@ -42,7 +42,7 @@ class DatasetAudio(data.Dataset):
         sample_len=16384,
         mode="train",
         shift=0,
-        use_random_cut=True,
+        use_random_cut=False,
     ):
         """Construct dataset for training and validation.
         Args:

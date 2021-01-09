@@ -46,7 +46,7 @@ def main(_config):
 
     def loss_function(x, y):
         sc_loss, mag_loss = mrstftloss(x.squeeze(1), y.squeeze(1))
-        return F.mse_loss(x, y) + sc_loss + mag_loss
+        return F.l1_loss(x, y) + sc_loss + mag_loss
 
     train_set = DatasetAudio(
         **dict(config.data.dataset_train),
@@ -80,11 +80,7 @@ def main(_config):
         save_weights_only=False,
     )
 
-    # adhoc load if only save weights
 
-    # model_pl.load_state_dict(
-    #     torch.load(os.path.join(check_point_path, c))["state_dict"]
-    # )
     resume_from = None
     if cfg.trainer.resume is not None:
         resume_from = os.path.join(check_point_path, cfg.trainer.resume)
